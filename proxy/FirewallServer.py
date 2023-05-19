@@ -89,7 +89,8 @@ def firewall(pkt):
 
 # Handler if file configuration modified
 def on_modified(event):
-    print(f"hey buddy, {event.src_path} has been modified")
+    print(f"{event.src_path} has been modified")
+    seedFromFile()
 
 if __name__ == "__main__":
     # Watchdog initialization
