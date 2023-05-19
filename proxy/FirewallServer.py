@@ -1,6 +1,9 @@
 from netfilterqueue import NetfilterQueue
 from scapy.all import *
 import json
+import time
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
 
 # Firewall config
 ListOfBannedIpAddr = []
@@ -84,14 +87,33 @@ def firewall(pkt):
     # Forward packet to iptables
 	pkt.accept()
 
-# nfqueue initialization
-nfqueue = NetfilterQueue()
-nfqueue.bind(1,firewall)
+# Handler if file configuration modified
+def on_modified(event):
+    print(f"hey buddy, {event.src_path} has been modified")
 
-try:
-    seedFromFile()
-    nfqueue.run()
-except KeyboardInterrupt:
-	pass
+if __name__ == "__main__":
+    # Watchdog initialization
+    patterns = ["*"]
+    ignore_patterns = None
+    ignore_directories = False
+    case_sensitive = True
+    my_event_handler = PatternMatchingEventHandler(patterns, ignore_patterns, ignore_directories, case_sensitive)
+    my_event_handler.on_modified = on_modified
+    path = "."
+    go_recursively = True
+    my_observer = Observer()
+    my_observer.schedule(my_event_handler, path, recursive=go_recursively)
+    my_observer.start()
 
-nfqueue.unbind()
+    # nfqueue initialization
+    nfqueue = NetfilterQueue()
+    nfqueue.bind(1,firewall)
+    try:
+        seedFromFile()
+        nfqueue.run()
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        my_observer.stop()
+        my_observer.join()
+        nfqueue.unbind()
