@@ -451,7 +451,7 @@ if __name__ == "__main__":
     try:
         # Run Proxy
         runProxy()
-        listener1 = Listener(config3)
+        listener1 = Listener(configListener)
         listener1.start()
         while True:
             time.sleep(1)
