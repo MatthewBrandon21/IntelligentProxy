@@ -14,6 +14,7 @@ from watchdog.events import PatternMatchingEventHandler
 import os
 import sys
 import psutil
+import logging
 
 class Server(Thread):
     def __init__(self, config):
@@ -233,6 +234,7 @@ class Listener(Thread):
             icmp_header = data[20:28]
             type, code, checksum, p_id, sequence = struct.unpack('bbHHh', icmp_header)
             print("type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]")
+            logging.info(f'type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]')
 
             # Data logging
 
@@ -426,7 +428,15 @@ def on_modified(event):
 
 proxy_servers = []
 
+configListener = {
+    "ICMP_BUFFERSIZE": 1508,
+}
+
 if __name__ == "__main__":
+    # Initialize logging
+    logging.basicConfig(filename='network.log', encoding='utf-8', level=logging.DEBUG)
+
+    # Initialize watchdog
     patterns = ["*"]
     ignore_patterns = None
     ignore_directories = False
@@ -439,16 +449,12 @@ if __name__ == "__main__":
     my_observer.schedule(my_event_handler, path, recursive=go_recursively)
     my_observer.start()
     try:
+        # Run Proxy
         runProxy()
+        listener1 = Listener(config3)
+        listener1.start()
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         my_observer.stop()
         my_observer.join()
-
-config3 = {
-    "ICMP_BUFFERSIZE": 1508,
-}
-
-listener1 = Listener(config3)
-listener1.start()
