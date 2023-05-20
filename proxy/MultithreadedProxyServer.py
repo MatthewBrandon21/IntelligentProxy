@@ -225,6 +225,7 @@ class Listener(Thread):
         self.bufferSize = config["ICMP_BUFFERSIZE"]
 
     def run(self):
+        global networklogger
         # Waiting for ICMP connection
         while True:
             data, addr = self.icmpSocket.recvfrom(self.bufferSize)
@@ -233,10 +234,10 @@ class Listener(Thread):
             print("Packet from %r: %r" % (addr,data))
             icmp_header = data[20:28]
             type, code, checksum, p_id, sequence = struct.unpack('bbHHh', icmp_header)
-            print("type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]")
-            logging.info(f'type:{str(type)}code:{str(code)}checksum:{str(checksum)}p_id:{str(p_id)}sequence:{str(sequence)}')
 
             # Data logging
+            print("type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]")
+            networklogger.info(f'type:{str(type)}code:{str(code)}checksum:{str(checksum)}p_id:{str(p_id)}sequence:{str(sequence)}')
 
 def seedProxyConfiguration():
     configAll = {}
@@ -432,6 +433,8 @@ class LoggerFilter(object):
     def filter(self, logRecord):
         return logRecord.levelno == self.__level
 
+networklogger = None
+
 proxy_servers = []
 
 configListener = {
@@ -439,10 +442,19 @@ configListener = {
 }
 
 if __name__ == "__main__":
+    #create a logger
+    networklogger = logging.getLogger('networklogger')
+    networklogger.setLevel(logging.INFO)
+    networkloggerhandler = logging.FileHandler('network.log')
+    networkloggerformatter = logging.Formatter('%(created)f:%(threadName)s:%(message)s:%(msecs)d')
+    networkloggerhandler.setFormatter(networkloggerformatter)
+    #set filter to log only INFO lines
+    networkloggerhandler.addFilter(LoggerFilter(logging.INFO))
+    networklogger.addHandler(networkloggerhandler)
+
     # Initialize logging
-    logging.basicConfig(filename='network.log', encoding='utf-8', level=logging.DEBUG,
-                        format='%(created)f:%(threadName)s:%(message)s:%(msecs)d',
-                        addFilter=LoggerFilter(logging.INFO))
+    logging.basicConfig(filename='application.log', encoding='utf-8', level=logging.DEBUG,
+                        format='%(created)f:%(threadName)s:%(message)s:%(msecs)d')
 
     # Initialize watchdog
     patterns = ["*"]
