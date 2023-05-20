@@ -12,6 +12,10 @@ import json
 class Server(Thread):
     def __init__(self, config):
         super(Server, self).__init__()
+
+        # save specific proxy configuration based on thread constructor
+        self.config = config
+
         # Force shutdown threads if program close
         signal.signal(signal.SIGINT, self.shutdown)
 
@@ -41,7 +45,7 @@ class Server(Thread):
         th_udp = threading.Thread(
             name="UDP Thread",
             target=self.proxy_udp_thread,
-            args=(self.udpSocket, self.udp_server_address, config),
+            args=(self.udpSocket, self.udp_server_address, self.config),
         )
 
         # Running thread process in background
@@ -58,7 +62,7 @@ class Server(Thread):
             th = threading.Thread(
                 name=self._getClientName(),
                 target=self.proxy_tcp_thread,
-                args=(clientSocket, self.tcp_server_address, config),
+                args=(clientSocket, self.tcp_server_address, self.config),
             )
 
             # Running thread process in background
@@ -227,135 +231,139 @@ class Listener(Thread):
             # Data logging
 
 def seedProxyConfiguration():
+    configAll = {}
+    count = 1
     try:
         file = open("ProxyConfig.json","r")
         data = json.load(file)
         file.close()
 
-        config = {}
-
-        if("PROXY_HOST_NAME" in data):
-            if(isinstance(data["PROXY_HOST_NAME"], str)):
-                config["PROXY_HOST_NAME"] = data["PROXY_HOST_NAME"]
+        for i in data['proxyConfiguration']:
+            config = {}
+            print(i)
+            if("PROXY_HOST_NAME" in i):
+                if(isinstance(i["PROXY_HOST_NAME"], str)):
+                    config["PROXY_HOST_NAME"] = i["PROXY_HOST_NAME"]
+                else:
+                    print("Invalid PROXY_HOST_NAME")
+                    config["PROXY_HOST_NAME"] = "0.0.0.0"
             else:
-                print("Invalid PROXY_HOST_NAME")
+                print("Missing PROXY_HOST_NAME")
                 config["PROXY_HOST_NAME"] = "0.0.0.0"
-        else:
-            print("Missing PROXY_HOST_NAME")
-            config["PROXY_HOST_NAME"] = "0.0.0.0"
 
-        if("PROXY_TCP_BIND_PORT" in data):
-            if(type(data["PROXY_TCP_BIND_PORT"])==int):
-                config["PROXY_TCP_BIND_PORT"] = data["PROXY_TCP_BIND_PORT"]
+            if("PROXY_TCP_BIND_PORT" in i):
+                if(type(i["PROXY_TCP_BIND_PORT"])==int):
+                    config["PROXY_TCP_BIND_PORT"] = i["PROXY_TCP_BIND_PORT"]
+                else:
+                    print("Invalid PROXY_TCP_BIND_PORT")
+                    config["PROXY_TCP_BIND_PORT"] = 3001
             else:
-                print("Invalid PROXY_TCP_BIND_PORT")
+                print("Missing PROXY_TCP_BIND_PORT")
                 config["PROXY_TCP_BIND_PORT"] = 3001
-        else:
-            print("Missing PROXY_TCP_BIND_PORT")
-            config["PROXY_TCP_BIND_PORT"] = 3001
-        
-        if("PROXY_UDP_BIND_PORT" in data):
-            if(type(data["PROXY_UDP_BIND_PORT"])==int):
-                config["PROXY_UDP_BIND_PORT"] = data["PROXY_UDP_BIND_PORT"]
+            
+            if("PROXY_UDP_BIND_PORT" in i):
+                if(type(i["PROXY_UDP_BIND_PORT"])==int):
+                    config["PROXY_UDP_BIND_PORT"] = i["PROXY_UDP_BIND_PORT"]
+                else:
+                    print("Invalid PROXY_UDP_BIND_PORT")
+                    config["PROXY_UDP_BIND_PORT"] = 3002
             else:
-                print("Invalid PROXY_UDP_BIND_PORT")
+                print("Missing PROXY_UDP_BIND_PORT")
                 config["PROXY_UDP_BIND_PORT"] = 3002
-        else:
-            print("Missing PROXY_UDP_BIND_PORT")
-            config["PROXY_UDP_BIND_PORT"] = 3002
-        
-        if("WEBSERVER_HOST_NAME" in data):
-            if(isinstance(data["WEBSERVER_HOST_NAME"], str)):
-                config["WEBSERVER_HOST_NAME"] = data["WEBSERVER_HOST_NAME"]
+            
+            if("WEBSERVER_HOST_NAME" in i):
+                if(isinstance(i["WEBSERVER_HOST_NAME"], str)):
+                    config["WEBSERVER_HOST_NAME"] = i["WEBSERVER_HOST_NAME"]
+                else:
+                    print("Invalid WEBSERVER_HOST_NAME")
+                    config["WEBSERVER_HOST_NAME"] = "0.0.0.0"
             else:
-                print("Invalid WEBSERVER_HOST_NAME")
+                print("Missing WEBSERVER_HOST_NAME")
                 config["WEBSERVER_HOST_NAME"] = "0.0.0.0"
-        else:
-            print("Missing WEBSERVER_HOST_NAME")
-            config["WEBSERVER_HOST_NAME"] = "0.0.0.0"
 
-        if("WEBSERVER_TCP_BIND_PORT" in data):
-            if(type(data["WEBSERVER_TCP_BIND_PORT"])==int):
-                config["WEBSERVER_TCP_BIND_PORT"] = data["WEBSERVER_TCP_BIND_PORT"]
+            if("WEBSERVER_TCP_BIND_PORT" in i):
+                if(type(i["WEBSERVER_TCP_BIND_PORT"])==int):
+                    config["WEBSERVER_TCP_BIND_PORT"] = i["WEBSERVER_TCP_BIND_PORT"]
+                else:
+                    print("Invalid WEBSERVER_TCP_BIND_PORT")
+                    config["WEBSERVER_TCP_BIND_PORT"] = 5000
             else:
-                print("Invalid WEBSERVER_TCP_BIND_PORT")
+                print("Missing WEBSERVER_TCP_BIND_PORT")
                 config["WEBSERVER_TCP_BIND_PORT"] = 5000
-        else:
-            print("Missing WEBSERVER_TCP_BIND_PORT")
-            config["WEBSERVER_TCP_BIND_PORT"] = 5000
-        
-        if("WEBSERVER_UDP_BIND_PORT" in data):
-            if(type(data["WEBSERVER_UDP_BIND_PORT"])==int):
-                config["WEBSERVER_UDP_BIND_PORT"] = data["WEBSERVER_UDP_BIND_PORT"]
+            
+            if("WEBSERVER_UDP_BIND_PORT" in i):
+                if(type(i["WEBSERVER_UDP_BIND_PORT"])==int):
+                    config["WEBSERVER_UDP_BIND_PORT"] = i["WEBSERVER_UDP_BIND_PORT"]
+                else:
+                    print("Invalid WEBSERVER_UDP_BIND_PORT")
+                    config["WEBSERVER_UDP_BIND_PORT"] = 5005
             else:
-                print("Invalid WEBSERVER_UDP_BIND_PORT")
+                print("Missing WEBSERVER_UDP_BIND_PORT")
                 config["WEBSERVER_UDP_BIND_PORT"] = 5005
-        else:
-            print("Missing WEBSERVER_UDP_BIND_PORT")
-            config["WEBSERVER_UDP_BIND_PORT"] = 5005
-        
-        if("MAX_REQUEST_LEN" in data):
-            if(type(data["MAX_REQUEST_LEN"])==int):
-                config["MAX_REQUEST_LEN"] = data["MAX_REQUEST_LEN"]
+            
+            if("MAX_REQUEST_LEN" in i):
+                if(type(i["MAX_REQUEST_LEN"])==int):
+                    config["MAX_REQUEST_LEN"] = i["MAX_REQUEST_LEN"]
+                else:
+                    print("Invalid MAX_REQUEST_LEN")
+                    config["MAX_REQUEST_LEN"] = 1000
             else:
-                print("Invalid MAX_REQUEST_LEN")
+                print("Missing MAX_REQUEST_LEN")
                 config["MAX_REQUEST_LEN"] = 1000
-        else:
-            print("Missing MAX_REQUEST_LEN")
-            config["MAX_REQUEST_LEN"] = 1000
-        
-        if("BUFFER_SIZE" in data):
-            if(type(data["BUFFER_SIZE"])==int):
-                config["BUFFER_SIZE"] = data["BUFFER_SIZE"]
+            
+            if("BUFFER_SIZE" in i):
+                if(type(i["BUFFER_SIZE"])==int):
+                    config["BUFFER_SIZE"] = i["BUFFER_SIZE"]
+                else:
+                    print("Invalid BUFFER_SIZE")
+                    config["BUFFER_SIZE"] = 1048576
             else:
-                print("Invalid BUFFER_SIZE")
+                print("Missing BUFFER_SIZE")
                 config["BUFFER_SIZE"] = 1048576
-        else:
-            print("Missing BUFFER_SIZE")
-            config["BUFFER_SIZE"] = 1048576
-        
-        if("CONNECTION_TIMEOUT" in data):
-            if(type(data["CONNECTION_TIMEOUT"])==int):
-                config["CONNECTION_TIMEOUT"] = data["CONNECTION_TIMEOUT"]
+            
+            if("CONNECTION_TIMEOUT" in i):
+                if(type(i["CONNECTION_TIMEOUT"])==int):
+                    config["CONNECTION_TIMEOUT"] = i["CONNECTION_TIMEOUT"]
+                else:
+                    print("Invalid CONNECTION_TIMEOUT")
+                    config["CONNECTION_TIMEOUT"] = 20
             else:
-                print("Invalid CONNECTION_TIMEOUT")
+                print("Missing CONNECTION_TIMEOUT")
                 config["CONNECTION_TIMEOUT"] = 20
-        else:
-            print("Missing CONNECTION_TIMEOUT")
-            config["CONNECTION_TIMEOUT"] = 20
-        
-        if("CONCURRENT_CONNECTION" in data):
-            if(type(data["CONCURRENT_CONNECTION"])==int):
-                config["CONCURRENT_CONNECTION"] = data["CONCURRENT_CONNECTION"]
+            
+            if("CONCURRENT_CONNECTION" in i):
+                if(type(i["CONCURRENT_CONNECTION"])==int):
+                    config["CONCURRENT_CONNECTION"] = i["CONCURRENT_CONNECTION"]
+                else:
+                    print("Invalid CONCURRENT_CONNECTION")
+                    config["CONCURRENT_CONNECTION"] = 10
             else:
-                print("Invalid CONCURRENT_CONNECTION")
+                print("Missing CONCURRENT_CONNECTION")
                 config["CONCURRENT_CONNECTION"] = 10
-        else:
-            print("Missing CONCURRENT_CONNECTION")
-            config["CONCURRENT_CONNECTION"] = 10
-        
-        if("UDP_BUFFERSIZE" in data):
-            if(type(data["UDP_BUFFERSIZE"])==int):
-                config["UDP_BUFFERSIZE"] = data["UDP_BUFFERSIZE"]
+            
+            if("UDP_BUFFERSIZE" in i):
+                if(type(i["UDP_BUFFERSIZE"])==int):
+                    config["UDP_BUFFERSIZE"] = i["UDP_BUFFERSIZE"]
+                else:
+                    print("Invalid UDP_BUFFERSIZE")
+                    config["UDP_BUFFERSIZE"] = 1024
             else:
-                print("Invalid UDP_BUFFERSIZE")
+                print("Missing UDP_BUFFERSIZE")
                 config["UDP_BUFFERSIZE"] = 1024
-        else:
-            print("Missing UDP_BUFFERSIZE")
-            config["UDP_BUFFERSIZE"] = 1024
-        
-        if("ICMP_BUFFERSIZE" in data):
-            if(type(data["ICMP_BUFFERSIZE"])==int):
-                config["ICMP_BUFFERSIZE"] = data["ICMP_BUFFERSIZE"]
+            
+            if("ICMP_BUFFERSIZE" in i):
+                if(type(i["ICMP_BUFFERSIZE"])==int):
+                    config["ICMP_BUFFERSIZE"] = i["ICMP_BUFFERSIZE"]
+                else:
+                    print("Invalid ICMP_BUFFERSIZE")
+                    config["ICMP_BUFFERSIZE"] = 1508
             else:
-                print("Invalid ICMP_BUFFERSIZE")
+                print("Missing ICMP_BUFFERSIZE")
                 config["ICMP_BUFFERSIZE"] = 1508
-        else:
-            print("Missing ICMP_BUFFERSIZE")
-            config["ICMP_BUFFERSIZE"] = 1508
-        
-        master_server = Server(config)
-        master_server.start()
+            
+            configAll["proxy{}".format(count)] = config
+            count = count + 1
+        return configAll
 
     except FileNotFoundError:
         print("Rule file (firewallrules.json) not found, setting default values")
@@ -373,8 +381,20 @@ def seedProxyConfiguration():
             "UDP_BUFFERSIZE": 1024,
             "ICMP_BUFFERSIZE": 1508,
         }
-        master_server = Server(config)
-        master_server.start()
+        configAll["proxy{}".format(count)] = config
+        count = count + 1
+        return configAll
+
+configAll = seedProxyConfiguration()
+proxy_servers = []
+
+print(configAll)
+
+for config_id, config in configAll.items():
+    print("creating proxy: ", config_id)
+    _proxy_server = Server(config)
+    _proxy_server.start()
+    proxy_servers.append(_proxy_server)
 
 config2 = {
     "PROXY_HOST_NAME": "0.0.0.0",
@@ -394,7 +414,6 @@ config2 = {
 config3 = {
     "ICMP_BUFFERSIZE": 1508,
 }
-
 
 master_server2 = Server(config2)
 master_server2.start()
