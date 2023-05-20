@@ -385,37 +385,31 @@ def seedProxyConfiguration():
         count = count + 1
         return configAll
 
-configAll = seedProxyConfiguration()
 proxy_servers = []
 
-print(configAll)
+def runProxy():
+    # If there is no proxy server created before
+    if proxy_servers:
+        try:
+            for i in proxy_servers:
+                    i.join()
+            proxy_servers = []
+        except:
+            print("Proxy cannot stop")
+    configAll = seedProxyConfiguration()
+    for config_id, config in configAll.items():
+        print("creating proxy: ", config_id)
+        _proxy_server = Server(config)
+        _proxy_server.start()
+        proxy_servers.append(_proxy_server)
 
-for config_id, config in configAll.items():
-    print("creating proxy: ", config_id)
-    _proxy_server = Server(config)
-    _proxy_server.start()
-    proxy_servers.append(_proxy_server)
+# print(configAll)
 
-config2 = {
-    "PROXY_HOST_NAME": "0.0.0.0",
-    "PROXY_TCP_BIND_PORT": 3003,
-    "PROXY_UDP_BIND_PORT": 3004,
-    "WEBSERVER_HOST_NAME": "127.0.0.1",
-    "WEBSERVER_TCP_BIND_PORT": 80,
-    "WEBSERVER_UDP_BIND_PORT": 5005,
-    "MAX_REQUEST_LEN": 1000,
-    "BUFFER_SIZE": 1024 * 1024,
-    "CONNECTION_TIMEOUT": 20,
-    "CONCURRENT_CONNECTION": 10,
-    "UDP_BUFFERSIZE": 1024,
-    "ICMP_BUFFERSIZE": 1508,
-}
+runProxy()
 
 config3 = {
     "ICMP_BUFFERSIZE": 1508,
 }
 
-master_server2 = Server(config2)
-master_server2.start()
 listener1 = Listener(config3)
 listener1.start()
