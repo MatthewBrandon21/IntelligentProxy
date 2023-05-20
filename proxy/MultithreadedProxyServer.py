@@ -8,6 +8,9 @@ import struct
 import base64
 from time import strftime, gmtime
 import json
+import time
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
 
 class Server(Thread):
     def __init__(self, config):
@@ -385,14 +388,15 @@ def seedProxyConfiguration():
         count = count + 1
         return configAll
 
-proxy_servers = []
-
 def runProxy():
+    global proxy_servers
     # If there is no proxy server created before
     if proxy_servers:
         try:
+            print("Stopping current proxy thread")
             for i in proxy_servers:
-                    i.join()
+                i.stop()
+                i.join()
             proxy_servers = []
         except:
             print("Proxy cannot stop")
@@ -403,9 +407,31 @@ def runProxy():
         _proxy_server.start()
         proxy_servers.append(_proxy_server)
 
-# print(configAll)
+def on_modified(event):
+    print(f"{event.src_path} has been modified")
+    runProxy()
 
-runProxy()
+proxy_servers = []
+
+if __name__ == "__main__":
+    patterns = ["*"]
+    ignore_patterns = None
+    ignore_directories = False
+    case_sensitive = True
+    my_event_handler = PatternMatchingEventHandler(patterns, ignore_patterns, ignore_directories, case_sensitive)
+    my_event_handler.on_modified = on_modified
+    path = "ProxyConfig.json"
+    go_recursively = True
+    my_observer = Observer()
+    my_observer.schedule(my_event_handler, path, recursive=go_recursively)
+    my_observer.start()
+    try:
+        runProxy()
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        my_observer.stop()
+        my_observer.join()
 
 config3 = {
     "ICMP_BUFFERSIZE": 1508,
