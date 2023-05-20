@@ -511,7 +511,7 @@ class DataParser(Thread):
                 pass
 
             # Flush data
-            datas = []
+            raw_datas = []
 
             # Sleep 5 second
             time.sleep(self.sleep_time)
