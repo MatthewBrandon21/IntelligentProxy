@@ -7,6 +7,7 @@ import time
 import struct
 import base64
 from time import strftime, gmtime
+import json
 
 class Server(Thread):
     def __init__(self, config):
@@ -225,20 +226,153 @@ class Listener(Thread):
 
             # Data logging
 
-config = {
-    "PROXY_HOST_NAME": "0.0.0.0",
-    "PROXY_TCP_BIND_PORT": 3001,
-    "PROXY_UDP_BIND_PORT": 3002,
-    "WEBSERVER_HOST_NAME": "127.0.0.1",
-    "WEBSERVER_TCP_BIND_PORT": 5000,
-    "WEBSERVER_UDP_BIND_PORT": 5005,
-    "MAX_REQUEST_LEN": 1000,
-    "BUFFER_SIZE": 1024 * 1024,
-    "CONNECTION_TIMEOUT": 20,
-    "CONCURRENT_CONNECTION": 10,
-    "UDP_BUFFERSIZE": 1024,
-    "ICMP_BUFFERSIZE": 1508,
-}
+def seedProxyConfiguration():
+    try:
+        file = open("ProxyConfig.json","r")
+        data = json.load(file)
+        file.close()
+
+        config = {}
+
+        if("PROXY_HOST_NAME" in data):
+            if(isinstance(data["PROXY_HOST_NAME"], str)):
+                config["PROXY_HOST_NAME"] = data["PROXY_HOST_NAME"]
+            else:
+                print("Invalid PROXY_HOST_NAME")
+                config["PROXY_HOST_NAME"] = "0.0.0.0"
+        else:
+            print("Missing PROXY_HOST_NAME")
+            config["PROXY_HOST_NAME"] = "0.0.0.0"
+
+        if("PROXY_TCP_BIND_PORT" in y):
+            if(type(data["PROXY_TCP_BIND_PORT"])==int):
+                config["PROXY_TCP_BIND_PORT"] = data["PROXY_TCP_BIND_PORT"]
+            else:
+                print("Invalid PROXY_TCP_BIND_PORT")
+                config["PROXY_TCP_BIND_PORT"] = 3001
+        else:
+            print("Missing PROXY_TCP_BIND_PORT")
+            config["PROXY_TCP_BIND_PORT"] = 3001
+        
+        if("PROXY_UDP_BIND_PORT" in y):
+            if(type(data["PROXY_UDP_BIND_PORT"])==int):
+                config["PROXY_UDP_BIND_PORT"] = data["PROXY_UDP_BIND_PORT"]
+            else:
+                print("Invalid PROXY_UDP_BIND_PORT")
+                config["PROXY_UDP_BIND_PORT"] = 3002
+        else:
+            print("Missing PROXY_UDP_BIND_PORT")
+            config["PROXY_UDP_BIND_PORT"] = 3002
+        
+        if("WEBSERVER_HOST_NAME" in data):
+            if(isinstance(data["WEBSERVER_HOST_NAME"], str)):
+                config["WEBSERVER_HOST_NAME"] = data["WEBSERVER_HOST_NAME"]
+            else:
+                print("Invalid WEBSERVER_HOST_NAME")
+                config["WEBSERVER_HOST_NAME"] = "0.0.0.0"
+        else:
+            print("Missing WEBSERVER_HOST_NAME")
+            config["WEBSERVER_HOST_NAME"] = "0.0.0.0"
+
+        if("WEBSERVER_TCP_BIND_PORT" in y):
+            if(type(data["WEBSERVER_TCP_BIND_PORT"])==int):
+                config["WEBSERVER_TCP_BIND_PORT"] = data["WEBSERVER_TCP_BIND_PORT"]
+            else:
+                print("Invalid WEBSERVER_TCP_BIND_PORT")
+                config["WEBSERVER_TCP_BIND_PORT"] = 5000
+        else:
+            print("Missing WEBSERVER_TCP_BIND_PORT")
+            config["WEBSERVER_TCP_BIND_PORT"] = 5000
+        
+        if("WEBSERVER_UDP_BIND_PORT" in y):
+            if(type(data["WEBSERVER_UDP_BIND_PORT"])==int):
+                config["WEBSERVER_UDP_BIND_PORT"] = data["WEBSERVER_UDP_BIND_PORT"]
+            else:
+                print("Invalid WEBSERVER_UDP_BIND_PORT")
+                config["WEBSERVER_UDP_BIND_PORT"] = 5005
+        else:
+            print("Missing WEBSERVER_UDP_BIND_PORT")
+            config["WEBSERVER_UDP_BIND_PORT"] = 5005
+        
+        if("MAX_REQUEST_LEN" in y):
+            if(type(data["MAX_REQUEST_LEN"])==int):
+                config["MAX_REQUEST_LEN"] = data["MAX_REQUEST_LEN"]
+            else:
+                print("Invalid MAX_REQUEST_LEN")
+                config["MAX_REQUEST_LEN"] = 1000
+        else:
+            print("Missing MAX_REQUEST_LEN")
+            config["MAX_REQUEST_LEN"] = 1000
+        
+        if("BUFFER_SIZE" in y):
+            if(type(data["BUFFER_SIZE"])==int):
+                config["BUFFER_SIZE"] = data["BUFFER_SIZE"]
+            else:
+                print("Invalid BUFFER_SIZE")
+                config["BUFFER_SIZE"] = 1048576
+        else:
+            print("Missing BUFFER_SIZE")
+            config["BUFFER_SIZE"] = 1048576
+        
+        if("CONNECTION_TIMEOUT" in y):
+            if(type(data["CONNECTION_TIMEOUT"])==int):
+                config["CONNECTION_TIMEOUT"] = data["CONNECTION_TIMEOUT"]
+            else:
+                print("Invalid CONNECTION_TIMEOUT")
+                config["CONNECTION_TIMEOUT"] = 20
+        else:
+            print("Missing CONNECTION_TIMEOUT")
+            config["CONNECTION_TIMEOUT"] = 20
+        
+        if("CONCURRENT_CONNECTION" in y):
+            if(type(data["CONCURRENT_CONNECTION"])==int):
+                config["CONCURRENT_CONNECTION"] = data["CONCURRENT_CONNECTION"]
+            else:
+                print("Invalid CONCURRENT_CONNECTION")
+                config["CONCURRENT_CONNECTION"] = 10
+        else:
+            print("Missing CONCURRENT_CONNECTION")
+            config["CONCURRENT_CONNECTION"] = 10
+        
+        if("UDP_BUFFERSIZE" in y):
+            if(type(data["UDP_BUFFERSIZE"])==int):
+                config["UDP_BUFFERSIZE"] = data["UDP_BUFFERSIZE"]
+            else:
+                print("Invalid UDP_BUFFERSIZE")
+                config["UDP_BUFFERSIZE"] = 1024
+        else:
+            print("Missing UDP_BUFFERSIZE")
+            config["UDP_BUFFERSIZE"] = 1024
+        
+        if("ICMP_BUFFERSIZE" in y):
+            if(type(data["ICMP_BUFFERSIZE"])==int):
+                config["ICMP_BUFFERSIZE"] = data["ICMP_BUFFERSIZE"]
+            else:
+                print("Invalid ICMP_BUFFERSIZE")
+                config["ICMP_BUFFERSIZE"] = 1508
+        else:
+            print("Missing ICMP_BUFFERSIZE")
+            config["ICMP_BUFFERSIZE"] = 1508
+        
+        return config
+
+    except FileNotFoundError:
+        print("Rule file (firewallrules.json) not found, setting default values")
+        config = {
+            "PROXY_HOST_NAME": "0.0.0.0",
+            "PROXY_TCP_BIND_PORT": 3001,
+            "PROXY_UDP_BIND_PORT": 3002,
+            "WEBSERVER_HOST_NAME": "127.0.0.1",
+            "WEBSERVER_TCP_BIND_PORT": 5000,
+            "WEBSERVER_UDP_BIND_PORT": 5005,
+            "MAX_REQUEST_LEN": 1000,
+            "BUFFER_SIZE": 1024 * 1024,
+            "CONNECTION_TIMEOUT": 20,
+            "CONCURRENT_CONNECTION": 10,
+            "UDP_BUFFERSIZE": 1024,
+            "ICMP_BUFFERSIZE": 1508,
+        }
+        return config
 
 config2 = {
     "PROXY_HOST_NAME": "0.0.0.0",
@@ -259,7 +393,7 @@ config3 = {
     "ICMP_BUFFERSIZE": 1508,
 }
 
-master_server = Server(config)
+master_server = Server(seedProxyConfiguration())
 master_server.start()
 master_server2 = Server(config2)
 master_server2.start()
