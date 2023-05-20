@@ -354,7 +354,8 @@ def seedProxyConfiguration():
             print("Missing ICMP_BUFFERSIZE")
             config["ICMP_BUFFERSIZE"] = 1508
         
-        return config
+        master_server = Server(config)
+        master_server.start()
 
     except FileNotFoundError:
         print("Rule file (firewallrules.json) not found, setting default values")
@@ -372,7 +373,8 @@ def seedProxyConfiguration():
             "UDP_BUFFERSIZE": 1024,
             "ICMP_BUFFERSIZE": 1508,
         }
-        return config
+        master_server = Server(config)
+        master_server.start()
 
 config2 = {
     "PROXY_HOST_NAME": "0.0.0.0",
@@ -393,8 +395,7 @@ config3 = {
     "ICMP_BUFFERSIZE": 1508,
 }
 
-master_server = Server(seedProxyConfiguration())
-master_server.start()
+
 master_server2 = Server(config2)
 master_server2.start()
 listener1 = Listener(config3)
