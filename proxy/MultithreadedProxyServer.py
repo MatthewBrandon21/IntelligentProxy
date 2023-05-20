@@ -458,6 +458,37 @@ class LoggerFilter(object):
     def filter(self, logRecord):
         return logRecord.levelno == self.__level
 
+# Data parser to machine learing dataset (will flush logfile every 5 second)
+class DataParser(Thread):
+    def __init__(self):
+        super(DataParser, self).__init__()
+
+        # Data parser configuration
+        self.sleep_time = 5
+        self.file_name = "network.log"
+
+    def run(self):
+        while True:
+            # Read logfile
+            network_log_file = open(self.file_name, 'r')
+            network_lines = network_log_file.readlines()
+            if(len(network_lines) != 0):
+                for line in network_lines:
+                    text = line.strip()
+                    data = text.split(",")
+                    if(len(data) == 19):
+                        print(data)
+                    else:
+                        print("Data parser input format wrong")
+                        logging.debug("Data parser input format wrong")
+            
+            # Flush logfile
+            with open(self.file_name, 'w'):
+                pass
+
+            # Sleep 5 second
+            time.sleep(self.sleep_time)
+
 networklogger = None
 
 proxy_servers = []
@@ -502,6 +533,8 @@ if __name__ == "__main__":
         runProxy()
         listener1 = Listener(configListener)
         listener1.start()
+        dataParser1 = DataParser()
+        dataParser1.start()
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
