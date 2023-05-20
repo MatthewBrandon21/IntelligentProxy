@@ -15,6 +15,7 @@ import os
 import sys
 import psutil
 import logging
+import numpy as np
 
 class Server(Thread):
     def __init__(self, config):
@@ -469,6 +470,9 @@ class DataParser(Thread):
 
     def run(self):
         while True:
+            # Array for save raw data from file
+            raw_datas = []
+
             # Read logfile
             network_log_file = open(self.file_name, 'r')
             network_lines = network_log_file.readlines()
@@ -477,14 +481,37 @@ class DataParser(Thread):
                     text = line.strip()
                     data = text.split(",")
                     if(len(data) == 19):
-                        print(data)
+                        raw_datas.append(data)
                     else:
                         print("Data parser input format wrong")
                         logging.debug("Data parser input format wrong")
+                
+                # Grouping data into same IP address and protocol
+                ipaddresses = set(map(lambda x:x[14], raw_datas))
+                protocols = set(map(lambda x:x[3], raw_datas))
+                categoried_datas = [[[y for y in raw_datas if y[14]==x and y[3]==j] for x in ipaddresses]for j in protocols]
+
+                # looping every each group (protocols x IP addresses)
+                for protocol_data in categoried_datas:
+                    if(len(protocol_data) != 0):
+                        for ip_data in protocol_data:
+                            if(len(ip_data) != 0):
+                                r_bytes = []
+                                for data in ip_data:
+                                    if(len(data) != 0):
+                                        r_bytes.append(int(data[11]))
+                                mean = np.mean(r_bytes)
+                                std = np.std(r_bytes)
+                                print(f'{ip_data[0][14]}+{ip_data[0][3]}')
+                                print(mean)
+                                print(std)
             
             # Flush logfile
             with open(self.file_name, 'w'):
                 pass
+
+            # Flush data
+            datas = []
 
             # Sleep 5 second
             time.sleep(self.sleep_time)
