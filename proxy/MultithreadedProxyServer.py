@@ -262,7 +262,7 @@ class Listener(Thread):
             # Data logging
             print("type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]")
             # networklogger.info(f'type:{str(type)}code:{str(code)}checksum:{str(checksum)}p_id:{str(p_id)}sequence:{str(sequence)}')
-            networklogger.info(f'{"ICMP"},{"NULL"},{str(type)},{str(code)},{str(checksum)},{str(p_id)},{str(sequence)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"PING"}')
+            networklogger.info(f'{"ICMP"},{"NULL"},{str(type)},{str(code)},{str(checksum)},{str(p_id)},{str(sequence)},{str(1)},{str(len(data))},{"NULL"},{"NULL"},{addr[0]},{str(addr[1])},{"NULL"},{"NULL"},{"PING"}')
 
 def seedProxyConfiguration():
     configAll = {}
