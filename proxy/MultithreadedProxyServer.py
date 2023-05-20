@@ -234,7 +234,7 @@ class Listener(Thread):
             icmp_header = data[20:28]
             type, code, checksum, p_id, sequence = struct.unpack('bbHHh', icmp_header)
             print("type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]")
-            logging.info(f'type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]')
+            logging.info(f'type:{str(type)}code:{str(code)}checksum:{str(checksum)}p_id:{str(p_id)}sequence:{str(sequence)}')
 
             # Data logging
 
@@ -434,7 +434,8 @@ configListener = {
 
 if __name__ == "__main__":
     # Initialize logging
-    logging.basicConfig(filename='network.log', encoding='utf-8', level=logging.DEBUG)
+    logging.basicConfig(filename='network.log', encoding='utf-8', level=logging.DEBUG,
+                        format='%(created)f:%(threadName)s:%(message)s:%(msecs)d')
 
     # Initialize watchdog
     patterns = ["*"]
