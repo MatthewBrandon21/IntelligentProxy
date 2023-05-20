@@ -67,6 +67,7 @@ class Server(Thread):
 
             # Handling new client connection with new thread
             th = threading.Thread(
+                name=self._getClientName(),
                 target=self.proxy_tcp_thread,
                 args=(clientSocket, client_address, self.tcp_server_address, self.config),
             )
@@ -182,6 +183,9 @@ class Server(Thread):
         tcp_end_connection = time.monotonic()
         networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(1)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{tcpServerAddress[0]},{str(tcpServerAddress[1])},{"success"}')
 
+        # Decrease client number
+        self.clientNum = self.clientNum - 1
+        
         # Connection forwarded successfully
         exit(0)
     
@@ -467,7 +471,7 @@ if __name__ == "__main__":
     networklogger = logging.getLogger('networklogger')
     networklogger.setLevel(logging.INFO)
     networkloggerhandler = logging.FileHandler('network.log')
-    networkloggerformatter = logging.Formatter('%(created)f,%(threadName)s,%(msecs)d,%(message)s')
+    networkloggerformatter = logging.Formatter('%(created)f,%(thread)d,%(msecs)d,%(message)s')
     networkloggerhandler.setFormatter(networkloggerformatter)
     #set filter to log only INFO lines
     networkloggerhandler.addFilter(LoggerFilter(logging.INFO))
@@ -475,7 +479,7 @@ if __name__ == "__main__":
 
     # Initialize logging
     logging.basicConfig(filename='application.log', encoding='utf-8', level=logging.DEBUG,
-                        format='%(created)f,%(threadName)s,%(msecs)d,%(message)s')
+                        format='%(created)f,%(thread)d,%(msecs)d,%(message)s')
     
     # Make sure logging file is empty
     with open('network.log', 'w'):
