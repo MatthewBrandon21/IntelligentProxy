@@ -69,7 +69,7 @@ class Server(Thread):
             th = threading.Thread(
                 name=self._getClientName(),
                 target=self.proxy_tcp_thread,
-                args=(clientSocket, self.tcp_server_address, self.config),
+                args=(clientSocket, client_address, self.tcp_server_address, self.config),
             )
 
             # Running thread process in background
@@ -81,7 +81,12 @@ class Server(Thread):
         # Close socket if program close
         self.serverSocket.close()
 
-    def proxy_tcp_thread(self, clientSocket, tcpServerAddress, config):
+    def proxy_tcp_thread(self, clientSocket, tcpClientAddress, tcpServerAddress, config):
+        global networklogger
+        
+        # Data forwarding
+        tcp_start_connection = time.monotonic()
+
         # Obtaining request
         req = clientSocket.recv(config["MAX_REQUEST_LEN"])
         str_req = str(req)
@@ -174,30 +179,46 @@ class Server(Thread):
             except:
                 pass
         
+        # Data logging
+        tcp_end_connection = time.monotonic()
+        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(1)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{tcpServerAddress[0]},{str(tcpServerAddress[1])},{"success"}')
+
         # Connection forwarded successfully
         exit(0)
     
     def proxy_udp_thread(self, udpSocket, udpServerAddress, config):
+        global networklogger
         udp_client_address = None
+        r_bytes = None
 
         # Waiting for UDP connection
         while True:
+            # Data receive
             data, address = udpSocket.recvfrom(config["UDP_BUFFERSIZE"])
 
+            # Data forwarding
             # If new connection
             if udp_client_address == None:
                 udp_client_address = address
+                udp_start_connection = time.monotonic()
             
             # If incoming connection from client
             if address == udp_client_address:
                 udpSocket.sendto(data, udpServerAddress)
+                # Data logging
+                r_bytes = len(data)
             
             # If incoming connection from server
             elif address == udpServerAddress:
                 udpSocket.sendto(data, udp_client_address)
 
+                # Data logging
+                udp_end_connection = time.monotonic()
+                networklogger.info(f'{"UDP"},{str((udp_end_connection-udp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(r_bytes))},{str(1)},{str(len(data))},{udp_client_address[0]},{str(udp_client_address[1])},{address[0]},{str(address[1])},{"success"}')
+                
                 # Reset to accept new client connection
                 udp_client_address = None
+                r_bytes = 0
             
             # If incoming not from server
             else:
@@ -237,7 +258,8 @@ class Listener(Thread):
 
             # Data logging
             print("type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]")
-            networklogger.info(f'type:{str(type)}code:{str(code)}checksum:{str(checksum)}p_id:{str(p_id)}sequence:{str(sequence)}')
+            # networklogger.info(f'type:{str(type)}code:{str(code)}checksum:{str(checksum)}p_id:{str(p_id)}sequence:{str(sequence)}')
+            networklogger.info(f'{"ICMP"},{"NULL"},{str(type)},{str(code)},{str(checksum)},{str(p_id)},{str(sequence)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"PING"}')
 
 def seedProxyConfiguration():
     configAll = {}
@@ -454,7 +476,7 @@ if __name__ == "__main__":
 
     # Initialize logging
     logging.basicConfig(filename='application.log', encoding='utf-8', level=logging.DEBUG,
-                        format='%(created)f:%(threadName)s:%(message)s:%(msecs)d')
+                        format='%(created)f,%(threadName)s,%(msecs)d,%(message)s')
 
     # Initialize watchdog
     patterns = ["*"]
