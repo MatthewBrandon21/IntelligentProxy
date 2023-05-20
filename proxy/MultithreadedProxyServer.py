@@ -426,6 +426,12 @@ def on_modified(event):
     print(f"{event.src_path} has been modified")
     restart_program()
 
+class LoggerFilter(object):
+    def __init__(self, level):
+        self.__level = level
+    def filter(self, logRecord):
+        return logRecord.levelno == self.__level
+
 proxy_servers = []
 
 configListener = {
@@ -435,7 +441,8 @@ configListener = {
 if __name__ == "__main__":
     # Initialize logging
     logging.basicConfig(filename='network.log', encoding='utf-8', level=logging.DEBUG,
-                        format='%(created)f:%(threadName)s:%(message)s:%(msecs)d')
+                        format='%(created)f:%(threadName)s:%(message)s:%(msecs)d',
+                        addFilter=LoggerFilter(logging.INFO))
 
     # Initialize watchdog
     patterns = ["*"]
