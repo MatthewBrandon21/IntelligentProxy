@@ -244,7 +244,7 @@ def seedProxyConfiguration():
             print("Missing PROXY_HOST_NAME")
             config["PROXY_HOST_NAME"] = "0.0.0.0"
 
-        if("PROXY_TCP_BIND_PORT" in y):
+        if("PROXY_TCP_BIND_PORT" in data):
             if(type(data["PROXY_TCP_BIND_PORT"])==int):
                 config["PROXY_TCP_BIND_PORT"] = data["PROXY_TCP_BIND_PORT"]
             else:
@@ -254,7 +254,7 @@ def seedProxyConfiguration():
             print("Missing PROXY_TCP_BIND_PORT")
             config["PROXY_TCP_BIND_PORT"] = 3001
         
-        if("PROXY_UDP_BIND_PORT" in y):
+        if("PROXY_UDP_BIND_PORT" in data):
             if(type(data["PROXY_UDP_BIND_PORT"])==int):
                 config["PROXY_UDP_BIND_PORT"] = data["PROXY_UDP_BIND_PORT"]
             else:
@@ -274,7 +274,7 @@ def seedProxyConfiguration():
             print("Missing WEBSERVER_HOST_NAME")
             config["WEBSERVER_HOST_NAME"] = "0.0.0.0"
 
-        if("WEBSERVER_TCP_BIND_PORT" in y):
+        if("WEBSERVER_TCP_BIND_PORT" in data):
             if(type(data["WEBSERVER_TCP_BIND_PORT"])==int):
                 config["WEBSERVER_TCP_BIND_PORT"] = data["WEBSERVER_TCP_BIND_PORT"]
             else:
@@ -284,7 +284,7 @@ def seedProxyConfiguration():
             print("Missing WEBSERVER_TCP_BIND_PORT")
             config["WEBSERVER_TCP_BIND_PORT"] = 5000
         
-        if("WEBSERVER_UDP_BIND_PORT" in y):
+        if("WEBSERVER_UDP_BIND_PORT" in data):
             if(type(data["WEBSERVER_UDP_BIND_PORT"])==int):
                 config["WEBSERVER_UDP_BIND_PORT"] = data["WEBSERVER_UDP_BIND_PORT"]
             else:
@@ -294,7 +294,7 @@ def seedProxyConfiguration():
             print("Missing WEBSERVER_UDP_BIND_PORT")
             config["WEBSERVER_UDP_BIND_PORT"] = 5005
         
-        if("MAX_REQUEST_LEN" in y):
+        if("MAX_REQUEST_LEN" in data):
             if(type(data["MAX_REQUEST_LEN"])==int):
                 config["MAX_REQUEST_LEN"] = data["MAX_REQUEST_LEN"]
             else:
@@ -304,7 +304,7 @@ def seedProxyConfiguration():
             print("Missing MAX_REQUEST_LEN")
             config["MAX_REQUEST_LEN"] = 1000
         
-        if("BUFFER_SIZE" in y):
+        if("BUFFER_SIZE" in data):
             if(type(data["BUFFER_SIZE"])==int):
                 config["BUFFER_SIZE"] = data["BUFFER_SIZE"]
             else:
@@ -314,7 +314,7 @@ def seedProxyConfiguration():
             print("Missing BUFFER_SIZE")
             config["BUFFER_SIZE"] = 1048576
         
-        if("CONNECTION_TIMEOUT" in y):
+        if("CONNECTION_TIMEOUT" in data):
             if(type(data["CONNECTION_TIMEOUT"])==int):
                 config["CONNECTION_TIMEOUT"] = data["CONNECTION_TIMEOUT"]
             else:
@@ -324,7 +324,7 @@ def seedProxyConfiguration():
             print("Missing CONNECTION_TIMEOUT")
             config["CONNECTION_TIMEOUT"] = 20
         
-        if("CONCURRENT_CONNECTION" in y):
+        if("CONCURRENT_CONNECTION" in data):
             if(type(data["CONCURRENT_CONNECTION"])==int):
                 config["CONCURRENT_CONNECTION"] = data["CONCURRENT_CONNECTION"]
             else:
@@ -334,7 +334,7 @@ def seedProxyConfiguration():
             print("Missing CONCURRENT_CONNECTION")
             config["CONCURRENT_CONNECTION"] = 10
         
-        if("UDP_BUFFERSIZE" in y):
+        if("UDP_BUFFERSIZE" in data):
             if(type(data["UDP_BUFFERSIZE"])==int):
                 config["UDP_BUFFERSIZE"] = data["UDP_BUFFERSIZE"]
             else:
@@ -344,7 +344,7 @@ def seedProxyConfiguration():
             print("Missing UDP_BUFFERSIZE")
             config["UDP_BUFFERSIZE"] = 1024
         
-        if("ICMP_BUFFERSIZE" in y):
+        if("ICMP_BUFFERSIZE" in data):
             if(type(data["ICMP_BUFFERSIZE"])==int):
                 config["ICMP_BUFFERSIZE"] = data["ICMP_BUFFERSIZE"]
             else:
