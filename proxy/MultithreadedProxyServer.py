@@ -67,7 +67,6 @@ class Server(Thread):
 
             # Handling new client connection with new thread
             th = threading.Thread(
-                name=self._getClientName(),
                 target=self.proxy_tcp_thread,
                 args=(clientSocket, client_address, self.tcp_server_address, self.config),
             )
@@ -468,7 +467,7 @@ if __name__ == "__main__":
     networklogger = logging.getLogger('networklogger')
     networklogger.setLevel(logging.INFO)
     networkloggerhandler = logging.FileHandler('network.log')
-    networkloggerformatter = logging.Formatter('%(created)f:%(threadName)s:%(message)s:%(msecs)d')
+    networkloggerformatter = logging.Formatter('%(created)f,%(threadName)s,%(msecs)d,%(message)s')
     networkloggerhandler.setFormatter(networkloggerformatter)
     #set filter to log only INFO lines
     networkloggerhandler.addFilter(LoggerFilter(logging.INFO))
@@ -477,6 +476,10 @@ if __name__ == "__main__":
     # Initialize logging
     logging.basicConfig(filename='application.log', encoding='utf-8', level=logging.DEBUG,
                         format='%(created)f,%(threadName)s,%(msecs)d,%(message)s')
+    
+    # Make sure logging file is empty
+    with open('network.log', 'w'):
+        pass
 
     # Initialize watchdog
     patterns = ["*"]
