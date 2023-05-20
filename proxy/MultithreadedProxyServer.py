@@ -11,6 +11,9 @@ import json
 import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
+import os
+import sys
+import psutil
 
 class Server(Thread):
     def __init__(self, config):
@@ -395,7 +398,6 @@ def runProxy():
         try:
             print("Stopping current proxy thread")
             for i in proxy_servers:
-                i.stop()
                 i.join()
             proxy_servers = []
         except:
@@ -407,9 +409,20 @@ def runProxy():
         _proxy_server.start()
         proxy_servers.append(_proxy_server)
 
+def restart_program():
+    print("Restarting Program")
+    try:
+        p = psutil.Process(os.getpid())
+        for handler in p.get_open_files() + p.connections():
+            os.close(handler.fd)
+    except Exception as e:
+        print(e)
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
 def on_modified(event):
     print(f"{event.src_path} has been modified")
-    runProxy()
+    restart_program()
 
 proxy_servers = []
 
