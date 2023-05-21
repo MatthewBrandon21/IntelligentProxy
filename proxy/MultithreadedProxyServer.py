@@ -174,6 +174,7 @@ class Server(Thread):
             proxy_client_sock.sendall(req)
 
             # Redirecting data from server to the client
+            server_packet_count = 0
             temp = b""
             while True:
                 try:
@@ -183,9 +184,11 @@ class Server(Thread):
                 if len(data) > 0:
                     temp += data
                     clientSocket.send(data)
-                    connection_state = connection_state - 1
+                    server_packet_count = server_packet_count + 1
                 else:
+                    server_packet_count = server_packet_count + 1
                     break
+            connection_state = connection_state - 1
             
             # Caching new data for next request
             try:
@@ -198,7 +201,7 @@ class Server(Thread):
         
         # Data logging
         tcp_end_connection = time.monotonic()
-        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(1)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{tcpServerAddress[0]},{str(tcpServerAddress[1])},{"success"},{url},{str(connection_state)}')
+        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(server_packet_count)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{tcpServerAddress[0]},{str(tcpServerAddress[1])},{"success"},{url},{str(connection_state)}')
 
         # Decrease client number
         self.clientNum = self.clientNum - 1
@@ -578,7 +581,7 @@ class DataParser(Thread):
                                         if(data[19] != "NULL"):
                                             tcp_url.append(self.StringToBytes(data[19]))
                                         if(data[20] != "NULL"):
-                                            connection_state.append(int(data[19]))
+                                            connection_state.append(int(data[20]))
                                 
                                 # mean = np.mean(r_bytes)
                                 
@@ -669,7 +672,7 @@ class DataParser(Thread):
                                 # Append to dataset file
                                 with open('dataset.csv', 'a') as datafile:
                                     writer = csv.writer(datafile, delimiter=",")
-                                    writer.writerow(header)
+                                    # writer.writerow(header)
                                     writer.writerow(smart)
 
                                 datafile.close()
