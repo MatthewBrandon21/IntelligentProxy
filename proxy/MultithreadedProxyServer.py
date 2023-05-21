@@ -16,6 +16,7 @@ import sys
 import psutil
 import logging
 import numpy as np
+import csv
 
 class Server(Thread):
     def __init__(self, config):
@@ -84,6 +85,12 @@ class Server(Thread):
 
     def proxy_tcp_thread(self, clientSocket, tcpClientAddress, tcpServerAddress, config):
         global networklogger
+
+        # Cache observer
+        is_cache = None
+
+        # Connection state for observe two-way interaction, 0 means one-way interaction
+        connection_state = 1
         
         # Data forwarding
         tcp_start_connection = time.monotonic()
@@ -106,7 +113,7 @@ class Server(Thread):
         # If response modified or not
         try:
             resp = requests.get(
-                url=url,
+                url="http://" + tcpServerAddress[0] + ":" + str(tcpServerAddress[1]) + url,
                 headers={
                     "If-Modified-Since": strftime(
                         "%a, %d %b %Y %H:%M:%S GMT", gmtime(0)
@@ -135,12 +142,20 @@ class Server(Thread):
                 self.reqDict[url][0] = 0
             else:
                 self.reqDict[url][0] += 1
+            
+            # Observed cache is used
+            is_cache = "true"
 
             # Sending from cache to the client
             clientSocket.send(self.Memory[url])
 
+            connection_state = connection_state - 1
+
         # Doesn't exist in cache
         else:
+            # Observed cache is not used
+            is_cache = "false"
+
             if url in self.reqDict.keys():
                 if time.time() - self.reqDict[url][1] > 300:
                     self.reqDict[url][0] = 0
@@ -168,6 +183,7 @@ class Server(Thread):
                 if len(data) > 0:
                     temp += data
                     clientSocket.send(data)
+                    connection_state = connection_state - 1
                 else:
                     break
             
@@ -182,7 +198,7 @@ class Server(Thread):
         
         # Data logging
         tcp_end_connection = time.monotonic()
-        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(1)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{tcpServerAddress[0]},{str(tcpServerAddress[1])},{"success"}')
+        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(1)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{tcpServerAddress[0]},{str(tcpServerAddress[1])},{"success"},{url},{str(connection_state)}')
 
         # Decrease client number
         self.clientNum = self.clientNum - 1
@@ -195,6 +211,9 @@ class Server(Thread):
         udp_client_address = None
         r_bytes = None
 
+        # check if two-way interaction with the destination IP, if not 0 means a packet skipped or failed to response
+        connection_state = 0
+
         # Waiting for UDP connection
         while True:
             # Data receive
@@ -205,20 +224,24 @@ class Server(Thread):
             if udp_client_address == None:
                 udp_client_address = address
                 udp_start_connection = time.monotonic()
+                connection_state = 0
             
             # If incoming connection from client
             if address == udp_client_address:
                 udpSocket.sendto(data, udpServerAddress)
                 # Data logging
                 r_bytes = len(data)
+                connection_state = connection_state + 1
             
             # If incoming connection from server
             elif address == udpServerAddress:
                 udpSocket.sendto(data, udp_client_address)
 
+                connection_state = connection_state - 1
+
                 # Data logging
                 udp_end_connection = time.monotonic()
-                networklogger.info(f'{"UDP"},{str((udp_end_connection-udp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(r_bytes))},{str(1)},{str(len(data))},{udp_client_address[0]},{str(udp_client_address[1])},{address[0]},{str(address[1])},{"success"}')
+                networklogger.info(f'{"UDP"},{str((udp_end_connection-udp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(r_bytes)},{str(1)},{str(len(data))},{udp_client_address[0]},{str(udp_client_address[1])},{address[0]},{str(address[1])},{"success"},{"NULL"},{str(connection_state)}')
                 
                 # Reset to accept new client connection
                 udp_client_address = None
@@ -263,7 +286,7 @@ class Listener(Thread):
             # Data logging
             print("type: [" + str(type) + "] code: [" + str(code) + "] checksum: [" + str(checksum) + "] p_id: [" + str(p_id) + "] sequence: [" + str(sequence) + "]")
             # networklogger.info(f'type:{str(type)}code:{str(code)}checksum:{str(checksum)}p_id:{str(p_id)}sequence:{str(sequence)}')
-            networklogger.info(f'{"ICMP"},{"NULL"},{str(type)},{str(code)},{str(checksum)},{str(p_id)},{str(sequence)},{str(1)},{str(len(data))},{"NULL"},{"NULL"},{addr[0]},{str(addr[1])},{"NULL"},{"NULL"},{"PING"}')
+            networklogger.info(f'{"ICMP"},{"NULL"},{str(type)},{str(code)},{str(checksum)},{str(p_id)},{str(sequence)},{str(1)},{str(len(data))},{"NULL"},{"NULL"},{addr[0]},{str(addr[1])},{"NULL"},{"NULL"},{"PING"},{"NULL"},{"NULL"}')
 
 def seedProxyConfiguration():
     configAll = {}
@@ -467,6 +490,7 @@ class DataParser(Thread):
         # Data parser configuration
         self.sleep_time = 5
         self.file_name = "network.log"
+        self.data_count = 21
 
     def run(self):
         while True:
@@ -480,7 +504,9 @@ class DataParser(Thread):
                 for line in network_lines:
                     text = line.strip()
                     data = text.split(",")
-                    if(len(data) == 19):
+
+                    # Check if data count is correct
+                    if(len(data) == self.data_count):
                         raw_datas.append(data)
                     else:
                         print("Data parser input format wrong")
@@ -496,15 +522,157 @@ class DataParser(Thread):
                     if(len(protocol_data) != 0):
                         for ip_data in protocol_data:
                             if(len(ip_data) != 0):
+                                timestamp = []
+                                no_thread = []
+                                msg_time = []
+                                connection_time = []
+                                icmp_type = []
+                                icmp_code = []
+                                icmp_checksum = []
+                                icmp_p_id = []
+                                sequence = []
+                                r_packets = []
                                 r_bytes = []
+                                n_packets = []
+                                n_bytes = []
+                                port_src = []
+                                ip_dest = []
+                                port_dest = []
+                                tcp_url = []
+                                connection_state = []
+                                total_connection_sum = len(ip_data)
                                 for data in ip_data:
                                     if(len(data) != 0):
-                                        r_bytes.append(int(data[11]))
-                                mean = np.mean(r_bytes)
-                                std = np.std(r_bytes)
-                                print(f'{ip_data[0][14]}+{ip_data[0][3]}')
-                                print(mean)
-                                print(std)
+                                        if(data[0] != "NULL"):
+                                            timestamp.append(float(data[0]))
+                                        if(data[1] != "NULL"):
+                                            no_thread.append(int(data[1]))
+                                        if(data[2] != "NULL"):
+                                            msg_time.append(int(data[2]))
+                                        if(data[4] != "NULL"):
+                                            connection_time.append(float(data[4]))
+                                        if(data[5] != "NULL"):
+                                            icmp_type.append(int(data[5]))
+                                        if(data[6] != "NULL"):
+                                            icmp_code.append(int(data[6]))
+                                        if(data[7] != "NULL"):
+                                            icmp_checksum.append(int(data[7]))
+                                        if(data[8] != "NULL"):
+                                            icmp_p_id.append(int(data[8]))
+                                        if(data[9] != "NULL"):
+                                            sequence.append(int(data[9]))
+                                        if(data[10] != "NULL"):
+                                            r_packets.append(int(data[10]))
+                                        if(data[11] != "NULL"):
+                                            r_bytes.append(int(data[11]))
+                                        if(data[12] != "NULL"):
+                                            n_packets.append(int(data[12]))
+                                        if(data[13] != "NULL"):
+                                            n_bytes.append(int(data[13]))
+                                        if(data[15] != "NULL"):
+                                            port_src.append(int(data[15]))
+                                        if(data[16] != "NULL"):
+                                            ip_dest.append(self.StringToBytes(data[16]))
+                                        if(data[17] != "NULL"):
+                                            port_dest.append(int(data[17]))
+                                        if(data[19] != "NULL"):
+                                            tcp_url.append(self.StringToBytes(data[19]))
+                                        if(data[20] != "NULL"):
+                                            connection_state.append(int(data[19]))
+                                
+                                # mean = np.mean(r_bytes)
+                                
+                                timestamp_std = np.std(timestamp)
+                                no_thread_std = np.std(no_thread)
+                                msg_time_std = np.std(msg_time)
+                                connection_time_std = np.std(connection_time)
+                                icmp_type_std = np.std(icmp_type)
+                                icmp_code_std = np.std(icmp_code)
+                                icmp_checksum_std = np.std(icmp_checksum)
+                                icmp_p_id_std = np.std(icmp_p_id)
+                                sequence_std = np.std(sequence)
+                                r_packets_std = np.std(r_packets)
+                                r_packets_sum = np.sum(r_packets)
+                                r_bytes_std = np.std(r_bytes)
+                                r_bytes_sum = np.sum(r_bytes)
+                                n_packets_std = np.std(n_packets)
+                                n_packets_sum = np.sum(n_packets)
+                                n_bytes_std = np.std(n_bytes)
+                                n_bytes_sum = np.sum(n_bytes)
+                                port_src_std = np.std(port_src)
+                                ip_dest_std = np.std(ip_dest)
+                                port_dest_std = np.std(port_dest)
+                                tcp_url_std = np.std(tcp_url)
+                                connection_state_std = np.std(connection_state)
+                                connection_state_sum = np.sum(connection_state)
+                                ip_src = ip_data[0][14]
+                                protocol = ip_data[0][3]
+                                number_of_unique_url = len(np.unique(tcp_url))
+                                number_of_unique_src_port = len(np.unique(port_src))
+                                number_of_unique_dest_port = len(np.unique(port_dest))
+                                number_of_unique_dest_ipaddress = len(np.unique(ip_dest))
+                                total_connection = total_connection_sum
+
+                                # Label : 1 Normal, 2 ICMP flood, 3 UDP flood, 4 TCP flood
+                                label = 1
+
+                                #Creating headers
+                                randvar1 = "timestamp_std"
+                                randvar2 = "no_thread_std"
+                                randvar3 = "msg_time_std"
+                                randvar4 = "connection_time_std"
+                                randvar5 = "icmp_type_std"
+                                randvar6 = "icmp_code_std"
+                                randvar7 = "icmp_checksum_std"
+                                randvar8 = "icmp_p_id_std"
+                                randvar9 = "sequence_std"
+                                randvar10 = "r_packets_std"
+                                randvar11 = "r_packets_sum"
+                                randvar12 = "r_bytes_std"
+                                randvar13 = "r_bytes_sum"
+                                randvar14 = "n_packets_std"
+                                randvar15 = "n_packets_sum"
+                                randvar16 = "n_bytes_std"
+                                randvar17 = "n_bytes_sum"
+                                randvar18 = "port_src_std"
+                                randvar19 = "ip_dest_std"
+                                randvar20 = "port_dest_std"
+                                randvar21 = "tcp_url_std"
+                                randvar22 = "connection_state_std"
+                                randvar23 = "connection_state_sum"
+                                randvar24 = "ip_src"
+                                randvar25 = "protocol"
+                                randvar26 = "number_of_unique_url"
+                                randvar27 = "number_of_unique_src_port"
+                                randvar28 = "number_of_unique_dest_port"
+                                randvar29 = "number_of_unique_dest_ipaddress"
+                                randvar30 = "total_connection"
+                                randvar31 = "label"
+
+                                header = []
+                                header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,
+                                          randvar7, randvar8, randvar9, randvar10, randvar11,
+                                          randvar12, randvar13, randvar14, randvar15, randvar16,
+                                          randvar17, randvar18, randvar19, randvar20, randvar21,
+                                          randvar22, randvar23, randvar24, randvar25, randvar26,
+                                          randvar27, randvar28, randvar29, randvar30, randvar31]
+
+                                smart = []
+                                smart = [timestamp_std,no_thread_std,msg_time_std,connection_time_std,icmp_type_std,
+                                         icmp_code_std, icmp_checksum_std, icmp_p_id_std, sequence_std, r_packets_std,
+                                         r_packets_sum, r_bytes_std, r_bytes_sum, n_packets_std, n_packets_sum,
+                                         n_bytes_std, n_bytes_sum, port_src_std, ip_dest_std, port_dest_std, tcp_url_std,
+                                         connection_state_std, connection_state_sum, ip_src, protocol, number_of_unique_url,
+                                         number_of_unique_src_port, number_of_unique_dest_port, number_of_unique_dest_ipaddress,
+                                         total_connection, label]
+                                
+                                # Append to dataset file
+                                with open('dataset.csv', 'a') as datafile:
+                                    writer = csv.writer(datafile, delimiter=",")
+                                    writer.writerow(header)
+                                    writer.writerow(smart)
+
+                                datafile.close()
             
             # Flush logfile
             with open(self.file_name, 'w'):
@@ -515,6 +683,13 @@ class DataParser(Thread):
 
             # Sleep 5 second
             time.sleep(self.sleep_time)
+    
+    def StringToBytes(self, data):
+        sum = 0
+        arrbytes = bytes(data, 'utf-8')
+        for i in arrbytes:
+            sum = sum + i
+        return(sum)
 
 networklogger = None
 
