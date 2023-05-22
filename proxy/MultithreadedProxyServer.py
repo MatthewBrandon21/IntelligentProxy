@@ -35,9 +35,9 @@ class Server(Thread):
         self.updated_available_server_table = pd.DataFrame(columns = column_names)
         self.policy_table = {}
         
-        for i, server in enumerate(config["ListOfServer"]):
+        for i, server in enumerate(config["LIST_SERVER"]):
             ip_addr, listenport = server.split(",")
-            self.available_server("1", str(i), "222", listenport, ip_addr)
+            self.available_server("1", str(i), "RoundRobbin", listenport, ip_addr)
         
         print(self.updated_available_server_table)
         print(self.policy_table)
@@ -96,7 +96,7 @@ class Server(Thread):
             th = threading.Thread(
                 name=self._getClientName(),
                 target=self.proxy_tcp_thread,
-                args=(clientSocket, client_address, self.tcp_server_address, self.config),
+                args=(clientSocket, client_address, self.config),
             )
 
             # Running thread process in background
@@ -120,14 +120,14 @@ class Server(Thread):
             "ip_addr": ip_addr,
         }
 
-        self.updated_available_server_table = self.updated_available_server_table.append(msg, ignore_index = True)
+        self.updated_available_server_table = self.updated_available_server_table._append(data, ignore_index = True)
         policy_list = set(self.updated_available_server_table["privPolyId"].tolist())
         
         for policy in policy_list:
             self.policy_table[policy] = itertools.cycle(set(self.updated_available_server_table\
                     [self.updated_available_server_table["privPolyId"]==policy]["id"].tolist()))
 
-    def proxy_tcp_thread(self, clientSocket, tcpClientAddress, tcpServerAddress, config):
+    def proxy_tcp_thread(self, clientSocket, tcpClientAddress, config):
         global networklogger
 
         # Cache observer
@@ -158,11 +158,18 @@ class Server(Thread):
         http_pos = url.find("://")
         if http_pos != -1:
             url = url[(http_pos + 3) :]
+        
+        # Get server address from round robbin balancer
+        target_host_id = self.round_robin(self.policy_table["RoundRobbin"])
+        server_name = self.updated_available_server_table.loc[self.updated_available_server_table["id"]==target_host_id, "ip_addr"].values[0]
+        server_port = int(self.updated_available_server_table.loc[self.updated_available_server_table["id"]==target_host_id, "listenport"].values[0])
+
+        serverAddress = [server_name, server_port]
 
         # If response modified or not
         try:
             resp = requests.get(
-                url="http://" + tcpServerAddress[0] + ":" + str(tcpServerAddress[1]) + url,
+                url="http://" + serverAddress[0] + ":" + str(serverAddress[1]) + url,
                 headers={
                     "If-Modified-Since": strftime(
                         "%a, %d %b %Y %H:%M:%S GMT", gmtime(0)
@@ -217,7 +224,7 @@ class Server(Thread):
             proxy_client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             proxy_client_sock.settimeout(config["CONNECTION_TIMEOUT"])
             try:
-                proxy_client_sock.connect(tcpServerAddress)
+                proxy_client_sock.connect(serverAddress)
             except:
                 exit(0)
             proxy_client_sock.sendall(req)
@@ -254,7 +261,7 @@ class Server(Thread):
         else:
             socket_timeout = 0
         tcp_end_connection = time.monotonic()
-        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(server_packet_count)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{tcpServerAddress[0]},{str(tcpServerAddress[1])},{"success"},{url},{str(connection_state)},{str(socket_timeout)}')
+        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(server_packet_count)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"success"},{url},{str(connection_state)},{str(socket_timeout)}')
 
         # Decrease client number
         self.clientNum = self.clientNum - 1
@@ -524,6 +531,16 @@ def seedProxyConfiguration():
                 print("Missing ICMP_BUFFERSIZE")
                 config["ICMP_BUFFERSIZE"] = 1508
             
+            if("LIST_SERVER" in i):
+                if(type(i["LIST_SERVER"])==list):
+                    config["LIST_SERVER"] = i["LIST_SERVER"]
+                else:
+                    print("Invalid LIST_SERVER")
+                    config["LIST_SERVER"] = []
+            else:
+                print("Missing LIST_SERVER")
+                config["LIST_SERVER"] = []
+            
             configAll["proxy{}".format(count)] = config
             count = count + 1
         return configAll
@@ -544,7 +561,7 @@ def seedProxyConfiguration():
             "CONCURRENT_CONNECTION": 10,
             "UDP_BUFFERSIZE": 1024,
             "ICMP_BUFFERSIZE": 1508,
-            "ListOfServer": ["127.0.0.1,5000", "127.0.0.1;5005"],
+            "LIST_SERVER": ["127.0.0.1,5000", "127.0.0.1;5005"],
         }
         configAll["proxy{}".format(count)] = config
         count = count + 1

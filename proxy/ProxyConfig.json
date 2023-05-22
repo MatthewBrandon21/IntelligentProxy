@@ -13,7 +13,7 @@
       "CONCURRENT_CONNECTION": 10,
       "UDP_BUFFERSIZE": 1024,
       "ICMP_BUFFERSIZE": 1508,
-      "ListOfServer": ["127.0.0.1,5000", "127.0.0.1;5005"]
+      "LIST_SERVER": ["127.0.0.1,5000", "127.0.0.1,5005"]
     },
     {
       "PROXY_HOST_NAME": "0.0.0.0",
@@ -28,7 +28,7 @@
       "CONCURRENT_CONNECTION": 10,
       "UDP_BUFFERSIZE": 1024,
       "ICMP_BUFFERSIZE": 1508,
-      "ListOfServer": ["127.0.0.1,5000", "127.0.0.1;5005"]
+      "LIST_SERVER": ["127.0.0.1,5000", "127.0.0.1,5005"]
     }
   ]
 }
