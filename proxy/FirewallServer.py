@@ -49,6 +49,7 @@ def seedFromFile():
             ListOfBannedPrefixes = []
 
     except FileNotFoundError:
+        logging.info('Firewall rule (FirewallRules.json) not found, setting default values')
         ListOfBannedIpAddr = []
         ListOfBannedPorts = []
         ListOfBannedPrefixes = []
@@ -96,6 +97,8 @@ def firewall(pkt):
 # Handler if file configuration modified
 def on_modified(event):
     print(f"{event.src_path} has been modified")
+    logging.info(f'{event.src_path} has been modified')
+    logging.info('Firewall listener restarting...')
     seedFromFile()
 
 if __name__ == "__main__":
