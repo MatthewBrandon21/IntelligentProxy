@@ -17,6 +17,8 @@ import psutil
 import logging
 import numpy as np
 import csv
+import pandas as pd
+import itertools
 
 class Server(Thread):
     def __init__(self, config):
@@ -27,6 +29,18 @@ class Server(Thread):
 
         # Force shutdown threads if program close
         signal.signal(signal.SIGINT, self.shutdown)
+
+        # define the available table for round robin load balancer
+        column_names = ["type", "id", "privPolyId", "listenport", "ip_addr"]
+        self.updated_available_server_table = pd.DataFrame(columns = column_names)
+        self.policy_table = {}
+        
+        for i, server in enumerate(config["ListOfServer"]):
+            ip_addr, listenport = server.split(",")
+            self.available_server("1", str(i), "222", listenport, ip_addr)
+        
+        print(self.updated_available_server_table)
+        print(self.policy_table)
 
         # TCP proxy initialization
         try:
@@ -93,6 +107,25 @@ class Server(Thread):
         
         # Close socket if program close
         self.serverSocket.close()
+    
+    def round_robin(self, iterable):
+        return next(iterable)
+    
+    def available_server(self, type, id, privPolyId, listenport, ip_addr):        
+        data = {
+            "type": type,
+            "id": id,
+            "privPolyId": privPolyId,
+            "listenport": listenport,
+            "ip_addr": ip_addr,
+        }
+
+        self.updated_available_server_table = self.updated_available_server_table.append(msg, ignore_index = True)
+        policy_list = set(self.updated_available_server_table["privPolyId"].tolist())
+        
+        for policy in policy_list:
+            self.policy_table[policy] = itertools.cycle(set(self.updated_available_server_table\
+                    [self.updated_available_server_table["privPolyId"]==policy]["id"].tolist()))
 
     def proxy_tcp_thread(self, clientSocket, tcpClientAddress, tcpServerAddress, config):
         global networklogger
@@ -511,6 +544,7 @@ def seedProxyConfiguration():
             "CONCURRENT_CONNECTION": 10,
             "UDP_BUFFERSIZE": 1024,
             "ICMP_BUFFERSIZE": 1508,
+            "ListOfServer": ["127.0.0.1,5000", "127.0.0.1;5005"],
         }
         configAll["proxy{}".format(count)] = config
         count = count + 1
