@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify, request
+import argparse
 
 app = Flask(__name__)
 
@@ -24,4 +25,11 @@ def setName():
         return jsonify(str("Successfully stored  " + str(data)))
 
 if __name__ == '__main__':
-	app.run(host="0.0.0.0")
+    parser = argparse.ArgumentParser(description='Flask Sample App')
+    parser.add_argument('-p', '--port', help='default port 5000')
+    args = parser.parse_args()
+    if(args.port):
+         port = args.port
+    else:
+         port = 5000
+    app.run(host="0.0.0.0", port=port)
