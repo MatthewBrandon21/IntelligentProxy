@@ -49,6 +49,7 @@ class Server(Thread):
         self.udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udpSocket.bind((config["PROXY_HOST_NAME"], config["PROXY_UDP_BIND_PORT"]))
         self.udp_server_address = ((config["WEBSERVER_HOST_NAME"], config["WEBSERVER_UDP_BIND_PORT"]))
+        self.udp_pair_list = []
 
         # UDP Proxy only need 1 thread (stateless connection)
         th_udp = threading.Thread(
@@ -223,36 +224,65 @@ class Server(Thread):
             data, address = udpSocket.recvfrom(config["UDP_BUFFERSIZE"])
 
             # Data forwarding
-            # If new connection
-            if udp_client_address == None:
-                udp_client_address = address
-                udp_start_connection = time.monotonic()
-                connection_state = 0
-            
-            # If incoming connection from client
-            if address == udp_client_address:
-                udpSocket.sendto(data, udpServerAddress)
-                # Data logging
-                r_bytes = len(data)
-                connection_state = connection_state + 1
-            
-            # If incoming connection from server
-            elif address == udpServerAddress:
-                udpSocket.sendto(data, udp_client_address)
+            if address and data:
+                destination_addr = self.check_pairing(address, udpServerAddress, len(data))
+                self.my_print(["forwarded a message from ", address, "into address of ", str(destination_addr)], ["data = ", data])
+                if destination_addr != None:
+                    udpSocket.sendto(data, destination_addr)
 
-                connection_state = connection_state - 1
+            # # If new connection
+            # if udp_client_address == None:
+            #     udp_client_address = address
+            #     udp_start_connection = time.monotonic()
+            #     connection_state = 0
+            
+            # # If incoming connection from client
+            # if address == udp_client_address:
+            #     udpSocket.sendto(data, udpServerAddress)
+            #     # Data logging
+            #     r_bytes = len(data)
+            #     connection_state = connection_state + 1
+            
+            # # If incoming connection from server
+            # elif address == udpServerAddress:
+            #     udpSocket.sendto(data, udp_client_address)
 
-                # Data logging
-                udp_end_connection = time.monotonic()
-                networklogger.info(f'{"UDP"},{str((udp_end_connection-udp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(r_bytes)},{str(1)},{str(len(data))},{udp_client_address[0]},{str(udp_client_address[1])},{address[0]},{str(address[1])},{"success"},{"NULL"},{str(connection_state)}')
+            #     connection_state = connection_state - 1
+
+            #     # Data logging
+            #     udp_end_connection = time.monotonic()
+            #     networklogger.info(f'{"UDP"},{str((udp_end_connection-udp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(r_bytes)},{str(1)},{str(len(data))},{udp_client_address[0]},{str(udp_client_address[1])},{address[0]},{str(address[1])},{"success"},{"NULL"},{str(connection_state)}')
                 
-                # Reset to accept new client connection
-                udp_client_address = None
-                r_bytes = 0
+            #     # Reset to accept new client connection
+            #     udp_client_address = None
+            #     r_bytes = 0
             
-            # If incoming not from server
-            else:
-                print("Unknown source")
+            # # If incoming not from server
+            # else:
+            #     print("Unknown source")
+    
+    def check_pairing(self, addr, udpServerAddress, data_bytes):
+        # Check if existing connection
+        for i in range(len(self.udp_pair_list)):
+            if addr == self.udp_pair_list[i][0]:
+                self.udp_pair_list[i][3] = self.udp_pair_list[i][3] + 1
+                return self.udp_pair_list[i][1]
+            if addr == self.udp_pair_list[i][1]:
+                destination_addr = self.udp_pair_list[i][0]
+                networklogger.info(f'{"UDP"},{str((time.monotonic() - self.udp_pair_list[i][2]))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(self.udp_pair_list[i][4])},{str(1)},{str(data_bytes)},{self.udp_pair_list[i][0][0]},{str(self.udp_pair_list[i][0][1])},{addr[0]},{str(addr[1])},{"success"},{"NULL"},{str(self.udp_pair_list[i][3] - 1)}')
+                self.udp_pair_list.pop(i)
+                return destination_addr
+        
+        # new connection
+        # if from server (must be already replied to client)
+        if(addr == udpServerAddress):
+            return None
+        # if from client
+        # client address, server address, initial time, initial connectionstate, initial connection size
+        else:
+            self.my_print(["new pair"], [addr, udpServerAddress])
+            self.udp_pair_list.append([addr, udpServerAddress, time.monotonic(), 1, data_bytes])
+            return udpServerAddress
 
     # Giving thread name by incrementing client connection
     def _getClientName(self):
