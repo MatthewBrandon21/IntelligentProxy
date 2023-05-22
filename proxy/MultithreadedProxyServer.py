@@ -29,27 +29,37 @@ class Server(Thread):
         signal.signal(signal.SIGINT, self.shutdown)
 
         # TCP proxy initialization
-        # Socket creation
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.serverSocket.bind((config["PROXY_HOST_NAME"], config["PROXY_TCP_BIND_PORT"]))
-        self.tcp_server_address = ((config["WEBSERVER_HOST_NAME"], config["WEBSERVER_TCP_BIND_PORT"]))
+        try:
+            # Socket creation
+            # AF_inet = IPv4 and SOCK_STREAM = TCP
+            self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.serverSocket.bind((config["PROXY_HOST_NAME"], config["PROXY_TCP_BIND_PORT"]))
+            self.tcp_server_address = ((config["WEBSERVER_HOST_NAME"], config["WEBSERVER_TCP_BIND_PORT"]))
 
-        # number of concurrent socket connection
-        self.serverSocket.listen(config["CONCURRENT_CONNECTION"])
+            # number of concurrent socket connection
+            self.serverSocket.listen(config["CONCURRENT_CONNECTION"])
 
-        # For logging count of connections
-        self.clientNum = 0
-        
-        # Caching storage
-        self.reqDict = {}
-        self.Memory = {}
+            # For logging count of connections
+            self.clientNum = 0
+            
+            # Caching storage
+            self.reqDict = {}
+            self.Memory = {}
+        except Exception as e:
+            print(f'Unable to create/re-use the TCP proxy socket. Error: {e}')
+            logging.error(f'Unable to create/re-use the TCP proxy socket. Error: {e}')
 
         # UDP proxy initialization
-        self.udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udpSocket.bind((config["PROXY_HOST_NAME"], config["PROXY_UDP_BIND_PORT"]))
-        self.udp_server_address = ((config["WEBSERVER_HOST_NAME"], config["WEBSERVER_UDP_BIND_PORT"]))
-        self.udp_pair_list = []
+        try:
+            # AF_inet = IPv4 and SOCK_DGRAM = UDP
+            self.udpSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.udpSocket.bind((config["PROXY_HOST_NAME"], config["PROXY_UDP_BIND_PORT"]))
+            self.udp_server_address = ((config["WEBSERVER_HOST_NAME"], config["WEBSERVER_UDP_BIND_PORT"]))
+            self.udp_pair_list = []
+        except Exception as e:
+            print(f'Unable to create/re-use the UDP proxy socket. Error: {e}')
+            logging.error(f'Unable to create/re-use the UDP proxy socket. Error: {e}')
 
         # UDP Proxy only need 1 thread (stateless connection)
         th_udp = threading.Thread(
@@ -308,10 +318,14 @@ class Listener(Thread):
     def __init__(self, config):
         super(Listener, self).__init__()
         
-        # UDP listener initialization 
-        self.icmpSocket = socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_ICMP)
-        self.icmpSocket.setsockopt(socket.SOL_IP, socket.IP_HDRINCL, 1)
-        self.bufferSize = config["ICMP_BUFFERSIZE"]
+        try:
+            # UDP listener initialization 
+            self.icmpSocket = socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_ICMP)
+            self.icmpSocket.setsockopt(socket.SOL_IP, socket.IP_HDRINCL, 1)
+            self.bufferSize = config["ICMP_BUFFERSIZE"]
+        except Exception as e:
+            print(f'Unable to create/re-use the ICMP listener socket. Error: {e}')
+            logging.error(f'Unable to create/re-use the ICMP listener socket. Error: {e}')
 
     def run(self):
         global networklogger
