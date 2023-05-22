@@ -223,10 +223,10 @@ class Server(Thread):
             # Data receive
             data, address = udpSocket.recvfrom(config["UDP_BUFFERSIZE"])
 
-            # Data forwarding
+            # Data forwarding (UDP multiclient)
             if address and data:
                 destination_addr = self.check_pairing(address, udpServerAddress, len(data))
-                self.my_print(["forwarded a message from ", address, "into address of ", str(destination_addr)], ["data = ", data])
+                print(["forwarded a message from ", address, "into address of ", str(destination_addr)], ["data = ", data])
                 if destination_addr != None:
                     udpSocket.sendto(data, destination_addr)
 
@@ -280,7 +280,7 @@ class Server(Thread):
         # if from client
         # client address, server address, initial time, initial connectionstate, initial connection size
         else:
-            self.my_print(["new pair"], [addr, udpServerAddress])
+            print(["new pair"], [addr, udpServerAddress])
             self.udp_pair_list.append([addr, udpServerAddress, time.monotonic(), 1, data_bytes])
             return udpServerAddress
 
