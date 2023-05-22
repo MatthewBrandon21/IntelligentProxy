@@ -100,7 +100,7 @@ def on_modified(event):
 
 if __name__ == "__main__":
     # Logging initialization
-    logging.basicConfig(filename='application.log', encoding='utf-8', level=logging.DEBUG,
+    logging.basicConfig(filename='firewall_application.log', encoding='utf-8', level=logging.DEBUG,
                         format='%(created)f,%(thread)d,%(msecs)d,%(message)s')
 
     # Watchdog initialization
