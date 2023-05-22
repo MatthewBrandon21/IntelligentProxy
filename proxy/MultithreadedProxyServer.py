@@ -164,7 +164,7 @@ class Server(Thread):
         server_name = self.updated_available_server_table.loc[self.updated_available_server_table["id"]==target_host_id, "ip_addr"].values[0]
         server_port = int(self.updated_available_server_table.loc[self.updated_available_server_table["id"]==target_host_id, "listenport"].values[0])
 
-        serverAddress = [server_name, server_port]
+        serverAddress = (server_name, server_port)
 
         # If response modified or not
         try:
