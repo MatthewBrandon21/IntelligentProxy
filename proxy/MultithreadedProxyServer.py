@@ -264,12 +264,20 @@ class Server(Thread):
     def check_pairing(self, addr, udpServerAddress, data_bytes):
         # Check if existing connection
         for i in range(len(self.udp_pair_list)):
+            # If from client
             if addr == self.udp_pair_list[i][0]:
+                # Add connection state (unbalanced connection)
                 self.udp_pair_list[i][3] = self.udp_pair_list[i][3] + 1
+                # Return server
                 return self.udp_pair_list[i][1]
+            
+            # If from server
             if addr == self.udp_pair_list[i][1]:
+                # return client address
                 destination_addr = self.udp_pair_list[i][0]
+                # logging
                 networklogger.info(f'{"UDP"},{str((time.monotonic() - self.udp_pair_list[i][2]))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(self.udp_pair_list[i][4])},{str(1)},{str(data_bytes)},{self.udp_pair_list[i][0][0]},{str(self.udp_pair_list[i][0][1])},{addr[0]},{str(addr[1])},{"success"},{"NULL"},{str(self.udp_pair_list[i][3] - 1)}')
+                # close connection
                 self.udp_pair_list.pop(i)
                 return destination_addr
         
