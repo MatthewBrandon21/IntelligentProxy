@@ -145,6 +145,8 @@ class Server(Thread):
         except Exception as e:
             print(f'Waiting to recieve data error TCP. Error: {e}')
             logging.error(f'Waiting to recieve data error TCP. Error: {e}')
+            tcp_start_connection = 0
+            connection_state = 1
             exit(0)
         str_req = str(req)
 
@@ -154,7 +156,9 @@ class Server(Thread):
         try:
             url = str_req.split("\n")[0].split(" ")[1]
         except:
-            networklogger.info(f'{"TCP"},{str((time.perf_counter()-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(0)},{str(0)},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{"NULL"},{"NULL"},{"failed_parsing"},{"NULL"},{str(connection_state)},{"NULL"}')
+            networklogger.info(f'{"TCP"},{str((time.perf_counter()-tcp_start_connection)*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(0)},{str(0)},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{"NULL"},{"NULL"},{"failed_parsing"},{"NULL"},{str(connection_state)},{"NULL"}')
+            tcp_start_connection = 0
+            connection_state = 1
             exit(0)
 
         # Removing the http part
@@ -231,7 +235,9 @@ class Server(Thread):
             except:
                 print(f'Error connect to web server. Error: {e}')
                 logging.error(f'Error connect to web server. Error: {e}')
-                networklogger.info(f'{"TCP"},{str((time.perf_counter()-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(0)},{str(0)},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"failed_web_server"},{url},{str(connection_state)},{str(socket_timeout)}')
+                networklogger.info(f'{"TCP"},{str((time.perf_counter()-tcp_start_connection)*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(0)},{str(0)},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"failed_web_server"},{url},{str(connection_state)},{str(socket_timeout)}')
+                tcp_start_connection = 0
+                connection_state = 1
                 exit(0)
             proxy_client_sock.sendall(req)
 
@@ -250,6 +256,7 @@ class Server(Thread):
                 else:
                     server_packet_count = server_packet_count + 1
                     break
+            tcp_end_connection = time.perf_counter()
             connection_state = connection_state - 1
             
             # Caching new data for next request
@@ -266,8 +273,9 @@ class Server(Thread):
             socket_timeout = clientSocket.gettimeout()
         else:
             socket_timeout = 0
-        networklogger.info(f'{"TCP"},{str((time.perf_counter()-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(server_packet_count)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"success"},{url},{str(connection_state)},{str(socket_timeout)}')
-
+        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection)*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(server_packet_count)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"success"},{url},{str(connection_state)},{str(socket_timeout)}')
+        tcp_start_connection = 0
+        connection_state = 1
         # Decrease client number
         self.clientNum = self.clientNum - 1
         
@@ -319,7 +327,7 @@ class Server(Thread):
 
             #     # Data logging
             #     udp_end_connection = time.perf_counter()
-            #     networklogger.info(f'{"UDP"},{str((udp_end_connection-udp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(r_bytes)},{str(1)},{str(len(data))},{udp_client_address[0]},{str(udp_client_address[1])},{address[0]},{str(address[1])},{"success"},{"NULL"},{str(connection_state)}')
+            #     networklogger.info(f'{"UDP"},{str((udp_end_connection-udp_start_connection)*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(r_bytes)},{str(1)},{str(len(data))},{udp_client_address[0]},{str(udp_client_address[1])},{address[0]},{str(address[1])},{"success"},{"NULL"},{str(connection_state)}')
                 
             #     # Reset to accept new client connection
             #     udp_client_address = None
@@ -344,7 +352,7 @@ class Server(Thread):
                 # return client address
                 destination_addr = self.udp_pair_list[i][0]
                 # logging
-                networklogger.info(f'{"UDP"},{str((time.perf_counter() - self.udp_pair_list[i][2]))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(self.udp_pair_list[i][4])},{str(1)},{str(data_bytes)},{self.udp_pair_list[i][0][0]},{str(self.udp_pair_list[i][0][1])},{addr[0]},{str(addr[1])},{"success"},{"NULL"},{str(self.udp_pair_list[i][3] - 1)},{str(socket_timeout)}')
+                networklogger.info(f'{"UDP"},{str((time.perf_counter() - self.udp_pair_list[i][2])*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(self.udp_pair_list[i][4])},{str(1)},{str(data_bytes)},{self.udp_pair_list[i][0][0]},{str(self.udp_pair_list[i][0][1])},{addr[0]},{str(addr[1])},{"success"},{"NULL"},{str(self.udp_pair_list[i][3] - 1)},{str(socket_timeout)}')
                 # close connection
                 self.udp_pair_list.pop(i)
                 return destination_addr
