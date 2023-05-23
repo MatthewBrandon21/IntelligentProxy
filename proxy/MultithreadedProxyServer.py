@@ -148,10 +148,14 @@ class Server(Thread):
             exit(0)
         str_req = str(req)
 
+        # do i need check if request len(req) == 0?
+
         # String parsing
         try:
             url = str_req.split("\n")[0].split(" ")[1]
         except:
+            tcp_end_connection = time.monotonic()
+            networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection))},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(0)},{str(0)},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{"NULL"},{"NULL"},{"failed_parsing"},{"NULL"},{str(connection_state)},{"NULL"}')
             exit(0)
 
         # Removing the http part
