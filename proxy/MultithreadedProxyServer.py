@@ -130,9 +130,6 @@ class Server(Thread):
     def proxy_tcp_thread(self, clientSocket, tcpClientAddress, config):
         global networklogger
 
-        # Cache observer
-        is_cache = None
-
         # Connection state for observe two-way interaction, 0 means one-way interaction
         connection_state = 1
         
@@ -173,21 +170,11 @@ class Server(Thread):
 
         serverAddress = (server_name, server_port)
 
-        # If response modified or not
-        try:
-            resp = requests.get(
-                url="http://" + serverAddress[0] + ":" + str(serverAddress[1]) + url,
-                headers={
-                    "If-Modified-Since": strftime(
-                        "%a, %d %b %Y %H:%M:%S GMT", gmtime(0)
-                    )
-                },
-            )
-            sc = resp.status_code
-        except:
+        if(config["ENABLE_CACHE"]):
+            # If response modified or not
             try:
                 resp = requests.get(
-                    url="http://" + url,
+                    url="http://" + serverAddress[0] + ":" + str(serverAddress[1]) + url,
                     headers={
                         "If-Modified-Since": strftime(
                             "%a, %d %b %Y %H:%M:%S GMT", gmtime(0)
@@ -196,37 +183,83 @@ class Server(Thread):
                 )
                 sc = resp.status_code
             except:
-                sc = 200
-        
-        # Check requested data in caching memory
-        if url in self.Memory.keys() and sc == 304:
-            # If exists in cache and cache not expired
-            if time.time() - self.reqDict[url][1] > 300:
-                self.reqDict[url][0] = 0
-            else:
-                self.reqDict[url][0] += 1
+                try:
+                    resp = requests.get(
+                        url="http://" + url,
+                        headers={
+                            "If-Modified-Since": strftime(
+                                "%a, %d %b %Y %H:%M:%S GMT", gmtime(0)
+                            )
+                        },
+                    )
+                    sc = resp.status_code
+                except:
+                    sc = 200
             
-            # Observed cache is used
-            is_cache = "true"
-
-            # Sending from cache to the client
-            clientSocket.send(self.Memory[url])
-
-            connection_state = connection_state - 1
-
-        # Doesn't exist in cache
-        else:
-            # Observed cache is not used
-            is_cache = "false"
-
-            if url in self.reqDict.keys():
+            # Check requested data in caching memory
+            if url in self.Memory.keys() and sc == 304:
+                # If exists in cache and cache not expired
                 if time.time() - self.reqDict[url][1] > 300:
                     self.reqDict[url][0] = 0
                 else:
                     self.reqDict[url][0] += 1
-            else:
-                self.reqDict[url] = [1, time.time()]
 
+                # Sending from cache to the client
+                clientSocket.send(self.Memory[url])
+
+                connection_state = connection_state - 1
+
+            # Doesn't exist in cache
+            else:
+                if url in self.reqDict.keys():
+                    if time.time() - self.reqDict[url][1] > 300:
+                        self.reqDict[url][0] = 0
+                    else:
+                        self.reqDict[url][0] += 1
+                else:
+                    self.reqDict[url] = [1, time.time()]
+
+                # Establishing a connection between the proxy server and the requested server
+                proxy_client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                proxy_client_sock.settimeout(config["CONNECTION_TIMEOUT"])
+                try:
+                    proxy_client_sock.connect(serverAddress)
+                except:
+                    print(f'Error connect to web server. Error: {e}')
+                    logging.error(f'Error connect to web server. Error: {e}')
+                    networklogger.info(f'{"TCP"},{str((time.perf_counter()-tcp_start_connection)*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(0)},{str(0)},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"failed_web_server"},{url},{str(connection_state)},{str(socket_timeout)}')
+                    tcp_start_connection = 0
+                    connection_state = 1
+                    exit(0)
+                proxy_client_sock.sendall(req)
+
+                # Redirecting data from server to the client
+                server_packet_count = 0
+                temp = b""
+                while True:
+                    try:
+                        data = proxy_client_sock.recv(config["BUFFER_SIZE"])
+                    except:
+                        break
+                    if len(data) > 0:
+                        temp += data
+                        clientSocket.send(data)
+                        server_packet_count = server_packet_count + 1
+                    else:
+                        server_packet_count = server_packet_count + 1
+                        break
+                tcp_end_connection = time.perf_counter()
+                connection_state = connection_state - 1
+                
+                # Caching new data for next request
+                try:
+                    if self.reqDict[url][0] >= 300:
+                        if len(self.Memory) == 3:
+                            self.Memory.pop(url, None)
+                        self.Memory[url] = temp
+                except:
+                    pass
+        else:
             # Establishing a connection between the proxy server and the requested server
             proxy_client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             proxy_client_sock.settimeout(config["CONNECTION_TIMEOUT"])
@@ -258,15 +291,6 @@ class Server(Thread):
                     break
             tcp_end_connection = time.perf_counter()
             connection_state = connection_state - 1
-            
-            # Caching new data for next request
-            try:
-                if self.reqDict[url][0] >= 300:
-                    if len(self.Memory) == 3:
-                        self.Memory.pop(url, None)
-                    self.Memory[url] = temp
-            except:
-                pass
         
         # Data logging
         if(clientSocket.gettimeout() != None):
@@ -554,6 +578,16 @@ def seedProxyConfiguration():
                 print("Missing LIST_SERVER")
                 config["LIST_SERVER"] = []
             
+            if("ENABLE_CACHE" in i):
+                if(i["ENABLE_CACHE"]=="True" or i["ENABLE_CACHE"]=="False"):
+                    config["ENABLE_CACHE"] = eval(i["ENABLE_CACHE"])
+                else:
+                    print("Invalid ENABLE_CACHE")
+                    config["ENABLE_CACHE"] = False
+            else:
+                print("Missing ENABLE_CACHE")
+                config["ENABLE_CACHE"] = False
+            
             configAll["proxy{}".format(count)] = config
             count = count + 1
         return configAll
@@ -575,6 +609,7 @@ def seedProxyConfiguration():
             "UDP_BUFFERSIZE": 1024,
             "ICMP_BUFFERSIZE": 1508,
             "LIST_SERVER": ["127.0.0.1,5000", "127.0.0.1;5005"],
+            "ENABLE_CACHE": False
         }
         configAll["proxy{}".format(count)] = config
         count = count + 1
