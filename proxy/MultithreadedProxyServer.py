@@ -297,7 +297,7 @@ class Server(Thread):
             socket_timeout = clientSocket.gettimeout()
         else:
             socket_timeout = 0
-        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection)*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(server_packet_count)},{str(len(data))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"success"},{url},{str(connection_state)},{str(socket_timeout)}')
+        networklogger.info(f'{"TCP"},{str((tcp_end_connection-tcp_start_connection)*1000)},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{"NULL"},{str(1)},{str(len(req))},{str(server_packet_count)},{str(len(temp))},{tcpClientAddress[0]},{str(tcpClientAddress[1])},{serverAddress[0]},{str(serverAddress[1])},{"success"},{url},{str(connection_state)},{str(socket_timeout)}')
         tcp_start_connection = 0
         connection_state = 1
         # Decrease client number

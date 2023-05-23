@@ -1,0 +1,35 @@
+{
+  "endpoints": [
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3001,
+      "url": "/"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3001,
+      "url": "/api"
+    },
+    {
+      "type": "POST",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3001,
+      "url": "/name",
+      "obj": {
+        "data": "dataku"
+      }
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/"
+    }
+  ]
+}
