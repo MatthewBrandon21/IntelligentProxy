@@ -757,7 +757,7 @@ class DataParser(Thread):
                                         if(data[20] != "NULL"):
                                             connection_state.append(int(data[20]))
                                         if(data[21] != "NULL"):
-                                            connection_state.append(int(data[21]))
+                                            connection_timeout.append(int(data[21]))
                                 
                                 # mean = np.mean(r_bytes)
                                 
@@ -765,6 +765,8 @@ class DataParser(Thread):
                                 no_thread_std = np.std(no_thread)
                                 msg_time_std = np.std(msg_time)
                                 connection_time_std = np.std(connection_time)
+                                connection_time_sum = np.sum(connection_time)
+                                connection_time_avg = np.average(connection_time)
                                 icmp_type_std = np.std(icmp_type)
                                 icmp_code_std = np.std(icmp_code)
                                 icmp_checksum_std = np.std(icmp_checksum)
@@ -774,10 +776,12 @@ class DataParser(Thread):
                                 r_packets_sum = np.sum(r_packets)
                                 r_bytes_std = np.std(r_bytes)
                                 r_bytes_sum = np.sum(r_bytes)
+                                r_bytes_avg = np.average(r_bytes)
                                 n_packets_std = np.std(n_packets)
                                 n_packets_sum = np.sum(n_packets)
                                 n_bytes_std = np.std(n_bytes)
                                 n_bytes_sum = np.sum(n_bytes)
+                                n_bytes_avg = np.average(n_bytes)
                                 port_src_std = np.std(port_src)
                                 ip_dest_std = np.std(ip_dest)
                                 port_dest_std = np.std(port_dest)
@@ -785,50 +789,54 @@ class DataParser(Thread):
                                 connection_state_std = np.std(connection_state)
                                 connection_state_sum = np.sum(connection_state)
                                 connection_timeout_std = np.std(connection_timeout)
-                                ip_src = ip_data[0][14]
                                 protocol = ip_data[0][3]
                                 number_of_unique_url = len(np.unique(tcp_url))
                                 number_of_unique_src_port = len(np.unique(port_src))
                                 number_of_unique_dest_port = len(np.unique(port_dest))
                                 number_of_unique_dest_ipaddress = len(np.unique(ip_dest))
                                 total_connection = total_connection_sum
+                                rate_connection = float(total_connection_sum/5)
 
-                                # Label : 1 Normal, 2 ICMP flood, 3 UDP flood, 4 TCP flood
-                                label = 1
+                                # Label : 0 Normal, 1 ICMP flood, 2 UDP flood, 3 TCP flood, 4 HTTP flood, 5 Syn Flood
+                                label = 0
 
                                 #Creating headers
                                 randvar1 = "timestamp_std"
                                 randvar2 = "no_thread_std"
                                 randvar3 = "msg_time_std"
                                 randvar4 = "connection_time_std"
-                                randvar5 = "icmp_type_std"
-                                randvar6 = "icmp_code_std"
-                                randvar7 = "icmp_checksum_std"
-                                randvar8 = "icmp_p_id_std"
-                                randvar9 = "sequence_std"
-                                randvar10 = "r_packets_std"
-                                randvar11 = "r_packets_sum"
-                                randvar12 = "r_bytes_std"
-                                randvar13 = "r_bytes_sum"
-                                randvar14 = "n_packets_std"
-                                randvar15 = "n_packets_sum"
-                                randvar16 = "n_bytes_std"
-                                randvar17 = "n_bytes_sum"
-                                randvar18 = "port_src_std"
-                                randvar19 = "ip_dest_std"
-                                randvar20 = "port_dest_std"
-                                randvar21 = "tcp_url_std"
-                                randvar22 = "connection_state_std"
-                                randvar23 = "connection_state_sum"
-                                randvar24 = "ip_src"
-                                randvar25 = "protocol"
-                                randvar26 = "number_of_unique_url"
-                                randvar27 = "number_of_unique_src_port"
-                                randvar28 = "number_of_unique_dest_port"
-                                randvar29 = "number_of_unique_dest_ipaddress"
-                                randvar30 = "total_connection"
-                                randvar31 = "connection_timeout"
-                                randvar32 = "label"
+                                randvar5 = "connection_time_sum"
+                                randvar6 = "connection_time_avg"
+                                randvar7 = "icmp_type_std"
+                                randvar8 = "icmp_code_std"
+                                randvar9 = "icmp_checksum_std"
+                                randvar10 = "icmp_p_id_std"
+                                randvar11 = "sequence_std"
+                                randvar12 = "r_packets_std"
+                                randvar13 = "r_packets_sum"
+                                randvar14 = "r_bytes_std"
+                                randvar15 = "r_bytes_sum"
+                                randvar16 = "r_bytes_avg"
+                                randvar17 = "n_packets_std"
+                                randvar18 = "n_packets_sum"
+                                randvar19 = "n_bytes_std"
+                                randvar20 = "n_bytes_sum"
+                                randvar21 = "n_bytes_avg"
+                                randvar22 = "port_src_std"
+                                randvar23 = "ip_dest_std"
+                                randvar24 = "port_dest_std"
+                                randvar25 = "tcp_url_std"
+                                randvar26 = "connection_state_std"
+                                randvar27 = "connection_state_sum"
+                                randvar28 = "protocol"
+                                randvar29 = "number_of_unique_url"
+                                randvar30 = "number_of_unique_src_port"
+                                randvar31 = "number_of_unique_dest_port"
+                                randvar32 = "number_of_unique_dest_ipaddress"
+                                randvar33 = "total_connection"
+                                randvar34 = "rate_connection"
+                                randvar35 = "connection_timeout"
+                                randvar36 = "label"
 
                                 header = []
                                 header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,
@@ -837,16 +845,16 @@ class DataParser(Thread):
                                           randvar17, randvar18, randvar19, randvar20, randvar21,
                                           randvar22, randvar23, randvar24, randvar25, randvar26,
                                           randvar27, randvar28, randvar29, randvar30, randvar31,
-                                          randvar32]
+                                          randvar32, randvar33, randvar34, randvar35, randvar36]
 
                                 smart = []
-                                smart = [timestamp_std,no_thread_std,msg_time_std,connection_time_std,icmp_type_std,
+                                smart = [timestamp_std, no_thread_std, msg_time_std, connection_time_std, connection_time_sum, connection_time_avg, icmp_type_std,
                                          icmp_code_std, icmp_checksum_std, icmp_p_id_std, sequence_std, r_packets_std,
-                                         r_packets_sum, r_bytes_std, r_bytes_sum, n_packets_std, n_packets_sum,
-                                         n_bytes_std, n_bytes_sum, port_src_std, ip_dest_std, port_dest_std, tcp_url_std,
-                                         connection_state_std, connection_state_sum, ip_src, protocol, number_of_unique_url,
+                                         r_packets_sum, r_bytes_std, r_bytes_sum, r_bytes_avg, n_packets_std, n_packets_sum,
+                                         n_bytes_std, n_bytes_sum, n_bytes_avg, port_src_std, ip_dest_std, port_dest_std, tcp_url_std,
+                                         connection_state_std, connection_state_sum, protocol, number_of_unique_url,
                                          number_of_unique_src_port, number_of_unique_dest_port, number_of_unique_dest_ipaddress,
-                                         total_connection, connection_timeout_std, label]
+                                         total_connection, rate_connection, connection_timeout_std, label]
                                 
                                 # Append to dataset file
                                 with open('dataset.csv', 'a') as datafile:
