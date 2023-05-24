@@ -8,16 +8,16 @@ def hello_world():
 	return render_template('index.html')
 
 @app.route('/login')
-def hello_world():
-	return render_template('page1.html')
+def login_page():
+	return render_template('page3.html')
 
 @app.route('/home')
-def hello_world():
+def landing_page():
 	return render_template('page2.html')
 
 @app.route('/register')
-def hello_world():
-	return render_template('page3.html')
+def register_page():
+	return render_template('page1.html')
 
 @app.route("/message", methods=["GET"])
 def message():
