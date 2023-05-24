@@ -19,6 +19,14 @@ def landing_page():
 def register_page():
 	return render_template('page1.html')
 
+@app.route('/documentation')
+def documentation_page():
+	return render_template('page5.html')
+
+@app.route('/singlepageapplication')
+def single_page():
+	return render_template('page4.html')
+
 @app.route("/message", methods=["GET"])
 def message():
     posted_data = request.get_json()

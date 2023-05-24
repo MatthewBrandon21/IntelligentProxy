@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Poppins;
+        width: 100%;
+        height: auto;
+
+        .mobile__nav {
+          width: 100%;
+          position: fixed;
+          height: 100vh;
+          background: #fff;
+          overflow: hidden;
+          z-index: 1;
+          padding: 30px 15px;
+          transform: translateY(-100%);
+          transition: transform 500ms ease-in;
+
+          .mobile_nav_header {
+            width: 100%;
+            height: 30px;
+            display: flex;
+            justify-content: flex-end;
+
+            .mobile__nav__close__btn {
+              span {
+                font-size: 30px;
+                line-height: 30px;
+                cursor: pointer;
+              }
+            }
+          }
+
+          nav {
+            margin-top: 50px;
+            width: 100%;
+
+            ul {
+              display: flex;
+              flex-direction: column;
+              row-gap: 30px;
+
+              li {
+                list-style: none;
+                height: 45px;
+
+                a {
+                  text-decoration: none;
+                  font-size: 14px;
+                  color: #333333;
+                  font-weight: 500;
+                  display: block;
+                  width: 100%;
+                  height: 100%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+
+                &:hover {
+                  background: black;
+
+                  a {
+                    color: white;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        .mobile__nav.is_visible {
+          transform: translateY(0);
+        }
+
+        header {
+          width: 100%;
+          padding: 25px;
+          display: flex;
+          justify-content: space-between;
+
+          .header-logo {
+            h4 {
+              font-size: 20px;
+            }
+          }
+
+          nav {
+            ul {
+              display: inline-flex;
+              column-gap: 30px;
+              align-items: center;
+
+              li {
+                list-style: none;
+
+                a {
+                  text-decoration: none;
+                  font-size: 14px;
+                  color: #333333;
+                  font-weight: 500;
+                }
+              }
+            }
+          }
+
+          .mobile__nav__open__btn {
+            display: none;
+
+            span {
+              font-size: 23px;
+              line-height: 30px;
+              cursor: pointer;
+            }
+          }
+        }
+
+        main {
+          width: 100%;
+          padding: 25px;
+
+          .home-section {
+            display: flex;
+            flex-direction: column;
+            row-gap: 25px;
+            align-items: center;
+
+            .h-s-inner__1,
+            .h-s-inner__3 {
+              width: 70%;
+              padding: 0px 40% 0px 0px;
+              display: flex;
+              flex-direction: column;
+              row-gap: 20px;
+            }
+            .h-s-inner__1 {
+              h6 {
+                font-size: 10px;
+                font-weight: 500;
+                color: #2d9cdb;
+              }
+              h1 {
+                margin-top: -10px;
+                font-weight: 500;
+                color: #333333;
+              }
+            }
+            .h-s-inner__2 {
+              width: 100%;
+
+              img {
+                width: 100%;
+                object-fit: cover;
+                border-radius: 10px;
+              }
+            }
+            .h-s-inner__3 {
+              h1 {
+                font-weight: 500;
+                color: #333333;
+              }
+              p {
+                font-size: 10px;
+                font-weight: 500;
+                color: #4f4f4f;
+              }
+              .inner-join {
+                position: relative;
+                height: 50px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+
+                span {
+                  font-size: 9px;
+                  font-weight: 500;
+                  color: #828282;
+                }
+                input {
+                  width: 100%;
+                  height: 35px;
+                  outline: none;
+                  border: 0;
+                  background: #f2f2f2;
+                  border-radius: 8px;
+                  padding: 5px 65px 5px 15px;
+                }
+                button {
+                  position: absolute;
+                  bottom: 2px;
+                  right: 2px;
+                  background: #2d9cdb;
+                  color: white;
+                  font-size: 10px;
+                  width: 55px;
+                  height: 31px;
+                  border: 0;
+                  outline: none;
+                  cursor: pointer;
+                  border-radius: 8px;
+                }
+              }
+            }
+          }
+          .service-section {
+            width: 80%;
+            margin: 80px auto 0px;
+
+            h1 {
+              font-size: 20px;
+              font-weight: 500;
+              color: #333333;
+            }
+            .inner-group {
+              margin-top: 30px;
+              display: flex;
+              justify-content: cener;
+              align-items: center;
+              column-gap: 40px;
+
+              .card {
+                width: 100%;
+                border-radius: 10px;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                row-gap: 15px;
+                cursor: pointer;
+                transition: box-shadow 300ms linear;
+
+                .card-image {
+                  span {
+                    width: 35px;
+                    height: 35px;
+                    background: #2d9cdb;
+                    display: grid;
+                    place-items: center;
+                    border-radius: 8px;
+                    color: white;
+                  }
+                }
+                .card-title {
+                  h3 {
+                    font-size: 14px;
+                  }
+                }
+                .card-content {
+                  p {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: #4f4f4f;
+                  }
+                }
+                .card-button {
+                  button {
+                    background: #e0e0e0;
+                    color: #828282;
+                    font-size: 10px;
+                    border: 0;
+                    outline: none;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    padding: 5px 10px;
+
+                    transition: background 300ms linear, color 300ms linear;
+                  }
+                }
+
+                &:hover {
+                  box-shadow: 0px 10px 30px rgba(51, 51, 51, 0.1);
+
+                  .card-button {
+                    button {
+                      background: #2d9cdb;
+                      color: #fff;
+                    }
+                  }
+                }
+              }
+
+              .card:nth-child(2) {
+                .card-image {
+                  span {
+                    background: #27ae60;
+                  }
+                }
+              }
+
+              .card:nth-child(3) {
+                .card-image {
+                  span {
+                    background: #eb5757;
+                  }
+                }
+              }
+            }
+          }
+          .work-section {
+            width: 80%;
+            margin: 80px auto 0px;
+
+            h1 {
+              font-size: 20px;
+              font-weight: 500;
+              color: #333333;
+            }
+            .inner-group {
+              margin-top: 30px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              column-gap: 20px;
+              row-gap: 80px;
+
+              figure {
+                width: 100%;
+                position: relative;
+
+                img {
+                  width: 100%;
+                  border-radius: 10px;
+                  object-fit: fill;
+                }
+                figcaption {
+                  font-size: 9px;
+                  font-weight: 400;
+                  color: #4f4f4f;
+                }
+                h3 {
+                  font-size: 14px;
+                  color: #333333;
+                  font-weight: 500;
+                }
+              }
+              figure:first-of-type {
+                margin-top: 100px;
+              }
+              figure:last-of-type {
+                margin-top: -100px;
+              }
+            }
+            .inner-button {
+              display: flex;
+              align-items: center;
+              justify-content: flex-end;
+
+              a {
+                text-decoration: none;
+                color: #2d9cdb;
+                font-size: 12px;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                span {
+                  font-size: 16px;
+                }
+              }
+            }
+          }
+          .client-section {
+            width: 80%;
+            margin: 80px auto;
+            display: flex;
+            flex-direction: column;
+            row-gap: 100px;
+
+            .inner__1 {
+              width: 100%;
+              display: flex;
+              align-items: center;
+              column-gap: 100px;
+
+              .inner-group__1 {
+                width: 30%;
+                display: flex;
+                flex-direction: column;
+                row-gap: 10px;
+
+                span {
+                  color: #eb5757;
+                  font-size: 12px;
+                  font-weight: 500;
+                }
+                h1 {
+                  font-size: 20px;
+                  font-weight: 500;
+                  color: #333333;
+                }
+                p {
+                  font-size: 10px;
+                  font-weight: 500;
+                  color: #4f4f4f;
+                }
+              }
+              .inner-group__2 {
+                width: calc(70% - 100px);
+                display: flex;
+                column-gap: 20px;
+
+                > div {
+                  width: 50%;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: cemter;
+                  row-gap: 20px;
+
+                  img {
+                    width: 100%;
+                    border-radius: 10px;
+                  }
+                }
+              }
+            }
+            .inner__2 {
+              width: 100%;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              row-gap: 30px;
+
+              h1 {
+                font-size: 20px;
+                font-weight: 500;
+                color: #333333;
+              }
+              .inner-group {
+                display: flex;
+                column-gap: 20px;
+
+                .inner-image {
+                  width: 50px;
+                  display: grid;
+                  place-items: center;
+
+                  img {
+                    width: 100%;
+                    border-radius: 6px;
+                  }
+                }
+                .inner-details {
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+
+                  h4 {
+                    font-size: 12px;
+                    font-weight: 500;
+                  }
+                  p {
+                    font-size: 10px;
+                    font-weight: 500;
+                    color: #4f4f4f;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        footer {
+          width: 100%;
+          background: #100e1d;
+          color: #f2f2f2;
+
+          .footer-header {
+            display: flex;
+            justify-content: space-evenly;
+            padding: 50px;
+
+            > div {
+              width: 25%;
+            }
+
+            .footer-nav {
+              ul {
+                display: flex;
+                flex-direction: column;
+
+                li {
+                  list-style: none;
+
+                  a {
+                    text-decoration: none;
+                    font-size: 12px;
+                    color: #f2f2f2;
+                    font-weight: 300;
+                  }
+                }
+              }
+            }
+            .footer-social {
+              .footer-logo {
+                h4 {
+                  font-size: 20px;
+                  font-weight: 500;
+                }
+              }
+              ul {
+                margin-top: 5px;
+                display: flex;
+                column-gap: 5px;
+
+                li {
+                  list-style: none;
+
+                  a {
+                    text-decoration: none;
+
+                    img {
+                      width: 90%;
+                    }
+                  }
+                }
+              }
+            }
+            .footer-join {
+              position: relative;
+              height: 50px;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+
+              span {
+                font-size: 9px;
+                font-weight: 500;
+                color: #f2f2f2;
+              }
+              input {
+                width: 100%;
+                height: 35px;
+                outline: none;
+                border: 0;
+                background: #f2f2f2;
+                border-radius: 8px;
+                padding: 5px 65px 5px 15px;
+              }
+              button {
+                position: absolute;
+                bottom: 2px;
+                right: 2px;
+                background: #2d9cdb;
+                color: white;
+                font-size: 10px;
+                width: 55px;
+                height: 31px;
+                border: 0;
+                outline: none;
+                cursor: pointer;
+                border-radius: 8px;
+              }
+            }
+          }
+
+          .footer-body {
+            height: 50px;
+            color: #bdbdbd;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+
+            a {
+              text-decoration: none;
+              color: inherit;
+            }
+          }
+        }
+      }
+
+      @media screen and (max-width: 1024px) {
+        body {
+          main {
+            .home-section {
+              .h-s-inner__1,
+              .h-s-inner__3 {
+                width: 80%;
+                padding: 0px 40% 0px 0px;
+              }
+            }
+          }
+        }
+      }
+      @media screen and (max-width: 768px) {
+        body {
+          header {
+            padding: 30px 15px;
+
+            nav {
+              display: none;
+            }
+
+            .mobile__nav__open__btn {
+              display: block;
+            }
+          }
+
+          main {
+            padding: 10px;
+
+            .home-section {
+              .h-s-inner__1,
+              .h-s-inner__3 {
+                width: 80%;
+                padding: 0px 0px 0px 0px;
+              }
+            }
+            .service-section {
+              width: 100%;
+
+              h1 {
+                margin-left: 25px;
+              }
+
+              .inner-group {
+                flex-direction: column;
+                row-gap: 40px;
+              }
+            }
+            .work-section {
+              width: 100%;
+
+              h1 {
+                margin-left: 25px;
+              }
+
+              .inner-group {
+                grid-template-columns: 1fr;
+                row-gap: 30px;
+
+                figure:first-of-type,
+                figure:last-of-type {
+                  margin-top: 0px;
+                }
+              }
+            }
+            .client-section {
+              width: 100%;
+              row-gap: 65px;
+              margin-bottom: 45px;
+
+              .inner__1 {
+                flex-direction: column;
+                row-gap: 30px;
+
+                .inner-group__1,
+                .inner-group__2 {
+                  width: 100%;
+                }
+              }
+            }
+          }
+
+          footer {
+            .footer-header {
+              padding: 25px 25px 50px 25px;
+              flex-direction: column;
+              row-gap: 25px;
+
+              > div {
+                width: 100%;
+              }
+            }
+          }
+        }
+      }
+    </style>
+    <title>Single Page App</title>
+  </head>
+  <body>
+    <div class="mobile__nav">
+      <div class="mobile_nav_header">
+        <div class="mobile__nav__close__btn" onclick="mobileMenu()">
+          <span class="bi bi-x"></span>
+        </div>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#home-section" onclick="mobileMenu()">Home</a></li>
+          <li><a href="#service-section" onclick="mobileMenu()">Services</a></li>
+          <li><a href="#work-section" onclick="mobileMenu()">Our Works</a></li>
+          <li><a href="#client-section" onclick="mobileMenu()">Clients</a></li>
+          <li><a href="#footer" onclick="mobileMenu()">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <header>
+      <div class="header-logo">
+        <h4>Edie</h4>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#home-section">Home</a></li>
+          <li><a href="#service-section">Services</a></li>
+          <li><a href="#work-section">Our Works</a></li>
+          <li><a href="#client-section">Clients</a></li>
+          <li><a href="#footer">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="mobile__nav__open__btn" onclick="mobileMenu()">
+        <span class="bi bi-list"></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="home-section" id="home-section">
+        <div class="h-s-inner__1">
+          <h6><span>Unhappy with your website?</span></h6>
+          <h1>
+            We create beautiful <br />
+            and fast web services
+          </h1>
+        </div>
+        <div class="h-s-inner__2">
+          <img src="https://rvs-edie-homepage.onrender.com/heroImage.jpg" alt="hero-image" />
+        </div>
+        <div class="h-s-inner__3">
+          <h1>
+            Story, emotion <br />
+            and purpose
+          </h1>
+          <p>We help transform you ideas into real world applications that will outperform your toughest copetition and help you achieve your strategic goals in short period of time.</p>
+          <div class="inner-join">
+            <span>Want us to contact you?</span>
+            <form action="">
+              <input type="email" placeholder="Email" required />
+              <button type="submit">Join</button>
+            </form>
+          </div>
+        </div>
+      </section>
+      <section class="service-section" id="service-section">
+        <h1>
+          We offer high <br />
+          demand services
+        </h1>
+        <div class="inner-group">
+          <div class="card">
+            <div class="card-image"><span class="bi bi-pencil"></span></div>
+            <div class="card-title"><h3>UI/UX Design</h3></div>
+            <div class="card-content">
+              <p>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis, eligendi culpa? Sit ducimus iste magni dolorem similique, non commodi voluptatibus eveniet aspernatur qui culpa id beatae voluptas explicabo dignissimos nulla!
+              </p>
+            </div>
+            <div class="card-button">
+              <button>Get started</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-image"><span class="bi bi-code"></span></div>
+            <div class="card-title"><h3>Front End</h3></div>
+            <div class="card-content">
+              <p>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis, eligendi culpa? Sit ducimus iste magni dolorem similique, non commodi voluptatibus eveniet aspernatur qui culpa id beatae voluptas explicabo dignissimos nulla!
+              </p>
+            </div>
+            <div class="card-button">
+              <button>Get started</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-image"><span class="bi bi-hdd-stack"></span></div>
+            <div class="card-title"><h3>Back End</h3></div>
+            <div class="card-content">
+              <p>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Omnis, eligendi culpa? Sit ducimus iste magni dolorem similique, non commodi voluptatibus eveniet aspernatur qui culpa id beatae voluptas explicabo dignissimos nulla!
+              </p>
+            </div>
+            <div class="card-button">
+              <button>Get started</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="work-section" id="work-section">
+        <h1>
+          Good design means <br />
+          good business
+        </h1>
+        <div class="inner-group">
+          <figure>
+            <img src="https://rvs-edie-homepage.onrender.com/smarthome.jpg" alt="smart-home" />
+            <figcaption>Full stack application</figcaption>
+            <h3>Smart home dashboard</h3>
+          </figure>
+          <figure>
+            <img src="https://rvs-edie-homepage.onrender.com/onboard.png" alt="smart-home" />
+            <figcaption>UX/UI design</figcaption>
+            <h3>Onboard application</h3>
+          </figure>
+          <figure>
+            <img src="https://rvs-edie-homepage.onrender.com/booking.png" alt="smart-home" />
+            <figcaption>Mobile application</figcaption>
+            <h3>Booking system</h3>
+          </figure>
+          <figure>
+            <img src="https://rvs-edie-homepage.onrender.com/juice-product.png" alt="smart-home" />
+            <figcaption>Front End application</figcaption>
+            <h3>Juice product homepage</h3>
+          </figure>
+        </div>
+        <div class="inner-button">
+          <a href="#!">see more <span class="bi bi-arrow-right-short"></span></a>
+        </div>
+      </section>
+      <section class="client-section" id="client-section">
+        <div class="inner__1">
+          <div class="inner-group__1">
+            <span>Meet the team</span>
+            <h1>
+              We are chilled <br />
+              and a laidback <br />
+              team
+            </h1>
+            <p>
+              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum, eos iusto. Consectetur dolor inventore deserunt ullam tenetur perspiciatis quia qui velit fuga nobis aliquid nisi, unde, eos voluptate ipsam repudiandae!
+            </p>
+          </div>
+
+          <div class="inner-group__2">
+            <div class="group__1">
+              <img src="https://rvs-edie-homepage.onrender.com/person3.png" alt="" />
+            </div>
+            <div class="group__2">
+              <img src="https://rvs-edie-homepage.onrender.com/person1.png" alt="" />
+              <img src="https://rvs-edie-homepage.onrender.com/person2.png" alt="" />
+            </div>
+          </div>
+        </div>
+        <div class="inner__2">
+          <h1>"Fast and outstanding results. Edie understands their customer's needs. They have a young and talented team".</h1>
+          <div class="inner-group">
+            <div class="inner-image">
+              <img src="https://rvs-edie-homepage.onrender.com/person4.png" alt="" />
+            </div>
+            <div class="inner-details">
+              <h4>Carlos Tran</h4>
+              <p>The Decorate Gatsby</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer">
+      <div class="footer-header">
+        <div class="footer-nav">
+          <ul>
+            <li><a href="#home-section">Home</a></li>
+            <li><a href="#service-section">Services</a></li>
+            <li><a href="#work-section">Our Works</a></li>
+            <li><a href="#client-section">Clients</a></li>
+            <li><a href="#footer">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-social">
+          <div class="footer-logo">
+            <h4>Edie</h4>
+          </div>
+          <ul>
+            <li>
+              <a href=""><img src="https://rvs-edie-homepage.onrender.com/instagram.svg" alt="" /></a>
+            </li>
+            <li>
+              <a href=""><img src="https://rvs-edie-homepage.onrender.com/linkedin.svg" alt="" /></a>
+            </li>
+            <li>
+              <a href=""><img src="https://rvs-edie-homepage.onrender.com/twitter.svg" alt="" /></a>
+            </li>
+          </ul>
+        </div>
+        <div class="footer-join">
+          <span>Want us to contact you?</span>
+          <form action="">
+            <input type="email" placeholder="Email" required />
+            <button type="submit">Join</button>
+          </form>
+        </div>
+      </div>
+      <div class="footer-body">
+        <p>
+          Created by - <a href="https://vetri-suriya.web.app/"><span>Vetri Suriya</span></a>
+        </p>
+      </div>
+    </footer>
+    <script>
+      var nav__el = document.querySelector(".mobile__nav");
+
+      function mobileMenu() {
+        if (nav__el.classList.contains("is_visible")) {
+          nav__el.classList.remove("is_visible");
+        } else {
+          nav__el.classList.add("is_visible");
+        }
+      }
+    </script>
+  </body>
+</html>
