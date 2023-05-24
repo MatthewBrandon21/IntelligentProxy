@@ -12,6 +12,7 @@ c. Iperf
    c. hping3 normal 5 - 10 menit
    d. ping -W 0.1 192.168.29.128
    e. ping 192.168.29.128 -n 300 (5 menit)
+   f. ICMP_normal.sh
 
 2. SYN Flood
    a. hping3
