@@ -7,6 +7,18 @@ app = Flask(__name__)
 def hello_world():
 	return render_template('index.html')
 
+@app.route('/login')
+def hello_world():
+	return render_template('page1.html')
+
+@app.route('/home')
+def hello_world():
+	return render_template('page2.html')
+
+@app.route('/register')
+def hello_world():
+	return render_template('page3.html')
+
 @app.route("/message", methods=["GET"])
 def message():
     posted_data = request.get_json()
