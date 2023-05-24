@@ -20,9 +20,19 @@ def apitest():
 @app.route("/name", methods=["POST"])
 def setName():
     if request.method=='POST':
-        posted_data = request.get_json()
-        data = posted_data['data']
-        return jsonify(str("Successfully stored  " + str(data)))
+        if(request.get_json()):
+            posted_data = request.get_json()
+            if(posted_data['data']):
+                data = posted_data['data']
+                return jsonify(str("Successfully stored  " + str(data)))
+            else:
+                 data = "Default"
+                 return jsonify(str("Successfully stored  " + str(data)))
+        else:
+            data = "Default"
+            return jsonify(str("Successfully stored  " + str(data)))
+    else:
+         return jsonify(str("Not Post Method"))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Flask Sample App')
