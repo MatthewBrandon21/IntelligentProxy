@@ -18,8 +18,8 @@ def main():
         try:
             host = argv[1]
             port = argv[2]
-            time_input = argv[3]
-            thread_count = argv[4]
+            time_input = int(argv[3])
+            thread_count = int(argv[4])
             t_end = time.time() + time_input
             time.sleep(0.35)
             ip = socket.gethostbyname(host)
