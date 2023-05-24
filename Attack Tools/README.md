@@ -10,6 +10,8 @@ c. Iperf
    a. Video (UDP) + Audio (TCP) Streaming -> 2 / 3 Video yang berbeda ~10 menit
    b. Random request generator -> 11 endpoint (flask + nodeJS), 5 menit, 2 / 3 instance
    c. hping3 normal 5 - 10 menit
+   d. ping -W 0.1 192.168.29.128
+   e. ping 192.168.29.128 -n 300 (5 menit)
 
 2. SYN Flood
    a. hping3
@@ -24,6 +26,7 @@ c. Iperf
    b. hping3 --icmp --flood 192.168.29.128
    c. ICMP_flood.py
    d. ICMP_flood2.py
+   e. hping3 -V -1 -d 1400 --faster 192.168.29.128
 
 4. TCP Flood
    a. TCP SYN -> TCP_flood.py
