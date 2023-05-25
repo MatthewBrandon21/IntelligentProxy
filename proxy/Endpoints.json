@@ -103,7 +103,7 @@
       "protocol": "http",
       "ip": "192.168.29.128",
       "port": 3003,
-      "url": "/api/random/name,phone"
+      "url": "/api/random/name"
     }
   ]
 }
