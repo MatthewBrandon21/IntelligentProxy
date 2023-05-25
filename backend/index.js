@@ -3,6 +3,8 @@ const cors = require("cors");
 var bodyParser = require("body-parser");
 const ORMService = require("./services/ORMService");
 
+const dem = require("./services/DemocracyService");
+
 const app = express();
 const ormService = new ORMService();
 
@@ -27,6 +29,7 @@ app.use(bodyParser.json());
 
 // simple route
 app.get("/", (req, res) => {
+  dem.publish("my-channel", { hello: "world" });
   res.json({ message: "Backend Intelligent Proxy Server" });
 });
 

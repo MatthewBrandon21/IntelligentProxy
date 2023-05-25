@@ -1,5 +1,7 @@
 const CRABService = require("../services/CRABService");
 
+const dem = require("../services/DemocracyService");
+
 const crabService = new CRABService("firewall");
 
 exports.allAccess = (req, res) => {
@@ -22,6 +24,7 @@ exports.create = function (req, res) {
   const metadata = req.body.metadata;
   // Verify payload received and then process it further
   crabService.createAsset(userKeypair, metadata).then((value) => {
+    dem.publish("firewall-channel", value.id);
     res.json(value);
   });
 };
@@ -37,6 +40,7 @@ exports.findOne = function (req, res) {
   const assetid = req.params.assetId;
   // Verify payload received and then process it further
   crabService.retrieveAsset(assetid).then((value) => {
+    dem.publish("firewall-channel", value[0].id);
     res.json(value);
   });
 };
