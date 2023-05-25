@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "name": "user",
+      "schema": {
+        "username": "value",
+        "email": "value",
+        "password": "value"
+      }
+    },
+    {
+      "name": "firewall",
+      "schema": {
+        "ip": "value",
+        "timestamp": "value",
+        "expired": "value"
+      }
+    }
+  ]
+}
