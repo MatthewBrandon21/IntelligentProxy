@@ -12,17 +12,84 @@
       "protocol": "http",
       "ip": "192.168.29.128",
       "port": 3001,
-      "url": "/api"
+      "url": "/login"
     },
     {
-      "type": "POST",
+      "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.128",
       "port": 3001,
-      "url": "/name",
-      "obj": {
-        "data": "dataku"
-      }
+      "url": "/home"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3001,
+      "url": "/register"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3001,
+      "url": "/documentation"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3001,
+      "url": "/singlepageapplication"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3001,
+      "url": "/api"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/api"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/api/user"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/api/user/10"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/api/article"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/api/article/constant"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/api/article/10"
     },
     {
       "type": "GET",
@@ -30,6 +97,13 @@
       "ip": "192.168.29.128",
       "port": 3003,
       "url": "/"
+    },
+    {
+      "type": "GET",
+      "protocol": "http",
+      "ip": "192.168.29.128",
+      "port": 3003,
+      "url": "/api/random/name,phone"
     }
   ]
 }
