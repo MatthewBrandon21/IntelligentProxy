@@ -8,9 +8,19 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
 
-num_of_category = 7
+num_of_category = 6
 features, labels = [], []
-training_files = ["training_datasets/ICMP_data_class_0.csv", "training_datasets/ICMP_data_class_1.csv"]
+training_files = ["dataset/dataset_HTTP.csv",
+                  "dataset/dataset_HTTP_TCP.csv",
+                  "dataset/dataset_ICMP.csv",
+                  "dataset/dataset_normal_icmp.csv",
+                  "dataset/dataset_normal_tcp.csv",
+                  "dataset/dataset_normal_udp.csv",
+                  "dataset/dataset_normal_udp_video.csv",
+                  "dataset/dataset_SYN_TCP.csv",
+                  "dataset/dataset_TCP.csv",
+                  "dataset/dataset_UDP.csv",
+                  "dataset/dataset_UDP2.csv"]
 
 def scrape_data():
     global training_files
@@ -22,20 +32,25 @@ def scrape_data():
         meal = open(fname, "rt")
         for line in meal:
             data_list = line.rsplit(",")
-            for i in range(len(data_list)):
-                if i < 2:
-                    data_list[i] = float(data_list[i])
-                else:
-                    data_list[i] = int(data_list[i])
+            if(len(data_list) != 36):
+                print("error data")
+            else:
+                data_list[27] = len(data_list[27])
+                for i in range(len(data_list)):
+                    if data_list[i] == "nan":
+                        data_list[i] = 0
+                data_list[(len(data_list)-1)]=data_list[(len(data_list)-1)].replace('\n', '')
+                features.append(data_list[:(len(data_list)-1)])
+                labels.append(data_list[(len(data_list)-1)])
             features.append(data_list[:(len(data_list)-1)])
             labels.append(data_list[(len(data_list)-1)])
         meal.close()
     print("Features first and last entries:\n\t", end = "")
-    print(features[:1] + features[(len(features)-2):])
+    print(features[:1] + features[(len(features)-1):])
     print("Labels first and last entries:\n\t", end = "")
-    print(labels[:1] + labels[(len(features)-2):])
+    print(labels[:1] + labels[(len(features)-1):])
     SEED = 42
-    features_train, features_test, labels_train, labels_test = train_test_split(features, labels, stratify=labels, test_size = 0.20, random_state = SEED)
+    features_train, features_test, labels_train, labels_test = train_test_split(features, labels, stratify=labels, test_size = 0.20, random_state = 0)
 
     return features_train, labels_train, features_test, labels_test
 
@@ -68,43 +83,45 @@ randvar1 = "timestamp_std"
 randvar2 = "no_thread_std"
 randvar3 = "msg_time_std"
 randvar4 = "connection_time_std"
-randvar5 = "icmp_type_std"
-randvar6 = "icmp_code_std"
-randvar7 = "icmp_checksum_std"
-randvar8 = "icmp_p_id_std"
-randvar9 = "sequence_std"
-randvar10 = "r_packets_std"
-randvar11 = "r_packets_sum"
-randvar12 = "r_bytes_std"
-randvar13 = "r_bytes_sum"
-randvar14 = "n_packets_std"
-randvar15 = "n_packets_sum"
-randvar16 = "n_bytes_std"
-randvar17 = "n_bytes_sum"
-randvar18 = "port_src_std"
-randvar19 = "ip_dest_std"
-randvar20 = "port_dest_std"
-randvar21 = "tcp_url_std"
-randvar22 = "connection_state_std"
-randvar23 = "connection_state_sum"
-randvar24 = "ip_src"
-randvar25 = "protocol"
-randvar26 = "number_of_unique_url"
-randvar27 = "number_of_unique_src_port"
-randvar28 = "number_of_unique_dest_port"
-randvar29 = "number_of_unique_dest_ipaddress"
-randvar30 = "total_connection"
-randvar31 = "connection_timeout"
-randvar32 = "label"
+randvar5 = "connection_time_sum"
+randvar6 = "connection_time_avg"
+randvar7 = "icmp_type_std"
+randvar8 = "icmp_code_std"
+randvar9 = "icmp_checksum_std"
+randvar10 = "icmp_p_id_std"
+randvar11 = "sequence_std"
+randvar12 = "r_packets_std"
+randvar13 = "r_packets_sum"
+randvar14 = "r_bytes_std"
+randvar15 = "r_bytes_sum"
+randvar16 = "r_bytes_avg"
+randvar17 = "n_packets_std"
+randvar18 = "n_packets_sum"
+randvar19 = "n_bytes_std"
+randvar20 = "n_bytes_sum"
+randvar21 = "n_bytes_avg"
+randvar22 = "port_src_std"
+randvar23 = "ip_dest_std"
+randvar24 = "port_dest_std"
+randvar25 = "tcp_url_std"
+randvar26 = "connection_state_std"
+randvar27 = "connection_state_sum"
+randvar28 = "protocol"
+randvar29 = "number_of_unique_url"
+randvar30 = "number_of_unique_src_port"
+randvar31 = "number_of_unique_dest_port"
+randvar32 = "number_of_unique_dest_ipaddress"
+randvar33 = "total_connection"
+randvar34 = "rate_connection"
+randvar35 = "connection_timeout"
 
-data_columns = []
 data_columns = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,
-            randvar7, randvar8, randvar9, randvar10, randvar11,
-            randvar12, randvar13, randvar14, randvar15, randvar16,
-            randvar17, randvar18, randvar19, randvar20, randvar21,
-            randvar22, randvar23, randvar24, randvar25, randvar26,
-            randvar27, randvar28, randvar29, randvar30, randvar31,
-            randvar32]
+                randvar7, randvar8, randvar9, randvar10, randvar11,
+                randvar12, randvar13, randvar14, randvar15, randvar16,
+                randvar17, randvar18, randvar19, randvar20, randvar21,
+                randvar22, randvar23, randvar24, randvar25, randvar26,
+                randvar27, randvar28, randvar29, randvar30, randvar31,
+                randvar32, randvar33, randvar34, randvar35]
 
 model1 = SVC(kernel='sigmoid', gamma='auto')
 model1.fit(train_x, train_y)
