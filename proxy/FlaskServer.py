@@ -54,6 +54,10 @@ def setName():
     else:
          return jsonify(str("Not Post Method"))
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Flask Sample App')
     parser.add_argument('-p', '--port', help='default port 5000')
