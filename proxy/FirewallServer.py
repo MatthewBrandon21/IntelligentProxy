@@ -6,6 +6,8 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import logging
 
+firewall_name = "node-firewall"
+
 # Firewall config
 ListOfBannedIpAddr = []
 ListOfBannedPorts = []
@@ -16,10 +18,20 @@ def seedFromFile():
     global ListOfBannedIpAddr
     global ListOfBannedPorts
     global ListOfBannedPrefixes
+    global firewall_name
+
     try:
         file = open("FirewallRules.json", "r")
         data = json.load(file)
         file.close()
+        
+        if "firewallName" in data:
+            if(isinstance(data["firewallName"], str)):
+                firewall_name = data["firewallName"]
+            else:
+                print("Invalid firewallName")
+        else:
+            print("Missing firewallName")
 
         # List of banned ip addresses
         if "ListOfBannedIpAddr" in data:

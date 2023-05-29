@@ -20,6 +20,8 @@ import csv
 import pandas as pd
 import itertools
 
+proxy_name = "node-proxy"
+
 class Server(Thread):
     def __init__(self, config):
         super(Server, self).__init__()
@@ -438,12 +440,22 @@ class Listener(Thread):
             networklogger.info(f'{"ICMP"},{"NULL"},{str(type)},{str(code)},{str(checksum)},{str(p_id)},{str(sequence)},{str(1)},{str(len(data))},{"NULL"},{"NULL"},{addr[0]},{str(addr[1])},{"NULL"},{"NULL"},{"PING"},{"NULL"},{"NULL"},{str(socket_timeout)}')
 
 def seedProxyConfiguration():
+    global proxy_name
+    
     configAll = {}
     count = 1
     try:
         file = open("ProxyConfig.json","r")
         data = json.load(file)
         file.close()
+
+        if "proxyName" in data:
+            if(isinstance(data["proxyName"], str)):
+                proxy_name = data["proxyName"]
+            else:
+                print("Invalid proxyName")
+        else:
+            print("Missing proxyName")
 
         for i in data['proxyConfiguration']:
             config = {}
