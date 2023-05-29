@@ -609,7 +609,7 @@ class DataParser(Thread):
                 # Grouping data into same IP address and protocol
                 ipaddresses = set(map(lambda x:x[5], raw_datas))
                 protocols = set(map(lambda x:x[2], raw_datas))
-                categoried_datas = [[[y for y in raw_datas if y[14]==x and y[3]==j] for x in ipaddresses]for j in protocols]
+                categoried_datas = [[[y for y in raw_datas if y[5]==x and y[2]==j] for x in ipaddresses]for j in protocols]
 
                 # looping every each group (protocols x IP addresses)
                 for protocol_data in categoried_datas:
