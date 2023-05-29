@@ -639,6 +639,7 @@ def runProxy():
         except:
             print("Proxy cannot stop")
     configAll = seedProxyConfiguration()
+    print(f"{proxy_name} is ready, creating proxy thread")
     for config_id, config in configAll.items():
         print("creating proxy: ", config_id)
         logging.debug(f"creating proxy: {config_id}")

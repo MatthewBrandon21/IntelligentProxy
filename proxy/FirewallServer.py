@@ -24,7 +24,7 @@ def seedFromFile():
         file = open("FirewallRules.json", "r")
         data = json.load(file)
         file.close()
-        
+
         if "firewallName" in data:
             if(isinstance(data["firewallName"], str)):
                 firewall_name = data["firewallName"]
@@ -138,6 +138,7 @@ if __name__ == "__main__":
     nfqueue.bind(1, firewall)
     try:
         seedFromFile()
+        print(f"{firewall_name} is ready, creating traffic listener")
         nfqueue.run()
         while True:
             time.sleep(1)
