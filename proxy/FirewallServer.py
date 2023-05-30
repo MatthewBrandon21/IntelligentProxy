@@ -199,13 +199,6 @@ def firewall(pkt):
         tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
         tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
         tcp_timeseries_data.append(tcp_timeseries)
-        if(len(tcp_timeseries_data) >= 25):
-            with open('dataset_tcp_timeseries.csv', 'a') as f_object:
-                writer_object = writer(f_object)
-                for data in tcp_timeseries_data:
-                    writer_object.writerow(data)
-                f_object.close()
-            tcp_timeseries_data = []
     
     if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
@@ -221,12 +214,6 @@ def firewall(pkt):
         udp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.len)},{str(t.chksum)},{str(pkt.get_payload_len())}')
         udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
         udp_timeseries_data.append(udp_timeseries)
-        if(len(udp_timeseries_data) >= 25):
-            with open('dataset_udp_timeseries.csv', 'a') as f_object:
-                writer_object = writer(f_object)
-                for data in udp_timeseries_data:
-                    writer_object.writerow(data)
-                f_object.close()
     
     if sca.haslayer(ICMP):
         t = sca.getlayer(ICMP)
@@ -243,12 +230,6 @@ def firewall(pkt):
             icmp_networklogger.info(f'{sca.src},{str(t.chksum)},{str(t.id)},{str(t.seq)},{str(pkt.get_payload_len())}')
             icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len()), str(0)]
             icmp_timeseries_data.append(icmp_timeseries)
-            if(len(icmp_timeseries_data) >= 25):
-                with open('dataset_icmp_timeseries.csv', 'a') as f_object:
-                    writer_object = writer(f_object)
-                    for data in icmp_timeseries_data:
-                        writer_object.writerow(data)
-                    f_object.close()
     
     # Forward packet to iptables
     pkt.accept()
@@ -591,6 +572,39 @@ class DataParser(Thread):
             sum = sum + i
         return(sum)
 
+# Timeseries data exporter
+class TimeseriesDataExporter(Thread):
+    def __init__(self):
+        super(TimeseriesDataExporter, self).__init__()
+
+    def run(self):
+        global tcp_timeseries_data
+        global udp_timeseries_data
+        global icmp_timeseries_data
+
+        while True:
+            if(len(tcp_timeseries_data) >= 25):
+                with open('dataset_tcp_timeseries.csv', 'a') as f_object:
+                    writer_object = writer(f_object)
+                    for data in tcp_timeseries_data:
+                        writer_object.writerow(data)
+                    f_object.close()
+                tcp_timeseries_data = []
+            if(len(udp_timeseries_data) >= 25):
+                with open('dataset_udp_timeseries.csv', 'a') as f_object:
+                    writer_object = writer(f_object)
+                    for data in udp_timeseries_data:
+                        writer_object.writerow(data)
+                    f_object.close()
+                udp_timeseries_data = []
+            if(len(icmp_timeseries_data) >= 25):
+                with open('dataset_icmp_timeseries.csv', 'a') as f_object:
+                    writer_object = writer(f_object)
+                    for data in icmp_timeseries_data:
+                        writer_object.writerow(data)
+                    f_object.close()
+                icmp_timeseries_data = []
+
 class LoggerFilter(object):
     def __init__(self, level):
         self.__level = level
@@ -663,6 +677,8 @@ if __name__ == "__main__":
         print(f"{firewall_name} is ready, creating traffic listener")
         dataParser1 = DataParser()
         dataParser1.start()
+        dataExporter1 = TimeseriesDataExporter()
+        dataExporter1.start()
         nfqueue.run()
         while True:
             time.sleep(1)
