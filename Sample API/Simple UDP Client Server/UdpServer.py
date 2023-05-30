@@ -18,7 +18,8 @@ print("UDP server up and listening")
 
 # Listen for incoming datagrams
 while(True):
-    msgFromServer       = ''.join(random.choice(letters) for i in range(random.randint(0, 50)))
+    # msgFromServer       = ''.join(random.choice(letters) for i in range(random.randint(0, 50)))
+    msgFromServer       = 'Hi UDP Client'
     bytesToSend         = str.encode(msgFromServer)
 
     bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)

@@ -48,62 +48,6 @@
       "ip": "192.168.29.128",
       "port": 3001,
       "url": "/api"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/api"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/api/user"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/api/user/10"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/api/article"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/api/article/constant"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/api/article/10"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/"
-    },
-    {
-      "type": "GET",
-      "protocol": "http",
-      "ip": "192.168.29.128",
-      "port": 3003,
-      "url": "/api/random/name"
     }
   ]
 }

@@ -108,8 +108,8 @@ def main():
                     except Exception as e:
                         print(f"Send packet error, error : {e}")
                     
-                    # Random sleep time from 0 to 10 seconds
-                    time.sleep(random.randint(0, 10))
+                    # Random sleep time from 0 to 60 seconds
+                    time.sleep(random.randint(0, 60))
             for i in range(thread_count):
                 t = threading.Thread(target=run, args=[i])
                 t.start()
