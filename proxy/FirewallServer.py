@@ -47,6 +47,7 @@ ListOfBannedIpAddr = []
 ListOfBannedPorts = []
 ListOfBannedPrefixes = []
 ListOfWebserverIpAddr = []
+ListOfWebserverPorts = []
 
 # logging data
 tcp_file_name = "tcp_firewall_network.log"
@@ -70,6 +71,7 @@ def seedFromFile():
     global ListOfBannedPrefixes
     global firewall_name
     global ListOfWebserverIpAddr
+    global ListOfWebserverPorts
 
     try:
         file = open("FirewallRules.json", "r")
@@ -101,6 +103,15 @@ def seedFromFile():
                 ListOfWebserverIpAddr = []
         else:
             ListOfWebserverIpAddr = []
+        
+        # List of webserver port
+        if "ListOfWebserverPorts" in data:
+            if type(data["ListOfWebserverPorts"]) == list:
+                ListOfWebserverPorts = data["ListOfWebserverPorts"]
+            else:
+                ListOfWebserverPorts = []
+        else:
+            ListOfWebserverPorts = []
 
         # List of banned ports
         if "ListOfBannedPorts" in data:
@@ -126,6 +137,7 @@ def seedFromFile():
         ListOfWebserverIpAddr = []
         ListOfBannedPorts = []
         ListOfBannedPrefixes = []
+        ListOfWebserverPorts = []
 
 
 def firewall(pkt):
@@ -181,39 +193,41 @@ def firewall(pkt):
     
     if(sca.haslayer(TCP)):
         t = sca.getlayer(TCP)
-        # tcp_data = {
-        #     "ip_src": sca.src,
-        #     "port_src": t.sport,
-        #     "port_dest": t.dport,
-        #     "seq": t.seq,
-        #     "ack": t.ack,
-        #     "dataofs": t.dataofs,
-        #     "reserved": t.reserved,
-        #     "flags": str(t.flags),
-        #     "window": t.window,
-        #     "chksum": t.chksum,
-        #     "urgptr": t.urgptr,
-        #     "payload_len": pkt.get_payload_len(),
-        # }
-        # print(f"sca TCP, connection : {t}, data : {t.fields}, flags: {t.fields['flags']}, timestamp : {pkt.get_timestamp()}, len : {pkt.get_payload_len()}")
-        tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
-        tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
-        tcp_timeseries_data.append(tcp_timeseries)
+        if t.dport in ListOfWebserverPorts:
+            # tcp_data = {
+            #     "ip_src": sca.src,
+            #     "port_src": t.sport,
+            #     "port_dest": t.dport,
+            #     "seq": t.seq,
+            #     "ack": t.ack,
+            #     "dataofs": t.dataofs,
+            #     "reserved": t.reserved,
+            #     "flags": str(t.flags),
+            #     "window": t.window,
+            #     "chksum": t.chksum,
+            #     "urgptr": t.urgptr,
+            #     "payload_len": pkt.get_payload_len(),
+            # }
+            # print(f"sca TCP, connection : {t}, data : {t.fields}, flags: {t.fields['flags']}, timestamp : {pkt.get_timestamp()}, len : {pkt.get_payload_len()}")
+            tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
+            tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
+            tcp_timeseries_data.append(tcp_timeseries)
     
     if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
-        # udp_data = {
-        #     "ip_src": sca.src,
-        #     "port_src": t.sport,
-        #     "port_dest": t.dport,
-        #     "len": t.len,
-        #     "chksum": t.chksum,
-        #     "port_dest": pkt.get_payload_len(),
-        # }
-        # print(f"sca UDP, connection : {t}, data : {t.fields}, timestamp : {pkt.get_timestamp()}, len : {pkt.get_payload_len()}")
-        udp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.len)},{str(t.chksum)},{str(pkt.get_payload_len())}')
-        udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
-        udp_timeseries_data.append(udp_timeseries)
+        if t.dport in ListOfWebserverPorts:
+            # udp_data = {
+            #     "ip_src": sca.src,
+            #     "port_src": t.sport,
+            #     "port_dest": t.dport,
+            #     "len": t.len,
+            #     "chksum": t.chksum,
+            #     "port_dest": pkt.get_payload_len(),
+            # }
+            # print(f"sca UDP, connection : {t}, data : {t.fields}, timestamp : {pkt.get_timestamp()}, len : {pkt.get_payload_len()}")
+            udp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.len)},{str(t.chksum)},{str(pkt.get_payload_len())}')
+            udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
+            udp_timeseries_data.append(udp_timeseries)
     
     if sca.haslayer(ICMP):
         t = sca.getlayer(ICMP)
