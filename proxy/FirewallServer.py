@@ -440,7 +440,7 @@ class DataParser(Thread):
                 ip_src = []
                 port_src = []
                 port_dest = []
-                len = []
+                len_pkt = []
                 chksum = []
                 payload_len = []
                 total_connection_sum = len(udp_raw_datas)
@@ -454,7 +454,7 @@ class DataParser(Thread):
                     if(data[3] != "NULL"):
                         port_dest.append(int(data[3]))
                     if(data[4] != "NULL"):
-                        len.append(int(data[4]))
+                        len_pkt.append(int(data[4]))
                     if(data[5] != "NULL"):
                         chksum.append(int(data[5]))
                     if(data[6] != "NULL"):
@@ -464,7 +464,7 @@ class DataParser(Thread):
                 ip_src_std = np.std(ip_src)
                 port_src_std = np.std(port_src)
                 port_dest_std = np.std(port_dest)
-                len_std = np.std(len)
+                len_std = np.std(len_pkt)
                 chksum_std = np.std(chksum)
                 payload_len_std = np.std(payload_len)
                 rate_connection = total_connection_sum
@@ -661,9 +661,9 @@ if __name__ == "__main__":
     try:
         seedFromFile()
         print(f"{firewall_name} is ready, creating traffic listener")
-        nfqueue.run()
         dataParser1 = DataParser()
         dataParser1.start()
+        nfqueue.run()
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
