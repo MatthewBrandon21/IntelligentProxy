@@ -555,7 +555,7 @@ class DataParser(Thread):
                 randvar8 = "label"
 
                 header = []
-                header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8,randvar9,randvar10]
+                header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8]
 
                 smart = []
                 smart = [timestamp_std,ip_src_std,chksum_std,id_std,seq_std,payload_len_std,rate_connection,label]
