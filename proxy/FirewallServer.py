@@ -14,6 +14,7 @@ import statistics
 from statistics import mode
 import joblib
 from keras.models import load_model
+from collections import Counter
 
 # from sklearn import svm
 # from sklearn.preprocessing import StandardScaler
@@ -234,6 +235,11 @@ def firewall(pkt):
             # if(len(tcp_timeseries_data) <= 25):
                 # tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len())]
                 # tcp_timeseries_data.append(tcp_timeseries)
+            if(tcp_ddos):
+                if(tcp_comparator(pkt, t)):
+                    print(f'TCP packet blocked, ip src : {sca.src}')
+                    pkt.drop()
+                    return
     
     if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
@@ -253,6 +259,11 @@ def firewall(pkt):
             # if(len(udp_timeseries_data) <= 25):
                 # udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len())]
                 # udp_timeseries_data.append(udp_timeseries)
+            if(udp_ddos):
+                if(udp_comparator(pkt, t)):
+                    print(f'UDP packet blocked, ip src : {sca.src}')
+                    pkt.drop()
+                    return
     
     if sca.haslayer(ICMP):
         t = sca.getlayer(ICMP)
@@ -272,6 +283,11 @@ def firewall(pkt):
             # if(len(icmp_timeseries_data) <= 25):
                 # icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len())]
                 # icmp_timeseries_data.append(icmp_timeseries)
+            if(icmp_ddos):
+                if(icmp_comparator(pkt, t)):
+                    print(f'UDP packet blocked, ip src : {sca.src}')
+                    pkt.drop()
+                    return
     
     # Forward packet to iptables
     pkt.accept()
@@ -368,6 +384,7 @@ class DataParser(Thread):
                 dataofs = []
                 reserved = []
                 flags = []
+                raw_flags = []
                 window = []
                 chksum = []
                 urgptr = []
@@ -392,6 +409,7 @@ class DataParser(Thread):
                         reserved.append(int(data[7]))
                     if(data[8] != "NULL"):
                         flags.append(self.StringToBytes(data[8]))
+                        raw_flags.append(str(data[8]))
                     if(data[9] != "NULL"):
                         window.append(int(data[9]))
                     if(data[10] != "NULL"):
@@ -453,7 +471,19 @@ class DataParser(Thread):
                 tcp_input = [timestamp_std,ip_src_std,port_src_std,port_dest_std,seq_std,ack_std,dataofs_std,reserved_std,flags_std,window_std,chksum_std,urgptr_std,payload_len_std,rate_connection]
                 tcp_scaled_input_data = tcp_svm_scaller.transform([tcp_input])
                 tcp_result = tcp_svm_model.predict([tcp_scaled_input_data[0]])[0]
-                print(f"Predicted result : {tcp_result}")
+                print(f"Predicted TCP flow result : {tcp_result}")
+                if(tcp_result == 1):
+                    tcp_ddos = True
+                    tcp_signature['port_dest'] = self.most_frequent(port_dest)
+                    tcp_signature['dataofs'] = self.most_frequent(dataofs)
+                    tcp_signature['reserved'] = self.most_frequent(reserved)
+                    tcp_signature['flags'] = self.most_frequent(raw_flags)
+                    tcp_signature['window'] = self.most_frequent(window)
+                    tcp_signature['urgptr'] = self.most_frequent(urgptr)
+                    tcp_signature['payload_len'] = self.most_frequent(payload_len)
+                    print(f'Block TCP signature, signature : {tcp_signature}')
+                else:
+                    tcp_ddos = False
             
             # Read and parse udp logfile
             udp_network_log_file = open(udp_file_name, 'r')
@@ -534,7 +564,15 @@ class DataParser(Thread):
                 udp_input = [timestamp_std,ip_src_std,port_src_std,port_dest_std,len_std,chksum_std,payload_len_std,rate_connection]
                 udp_scaled_input_data = udp_svm_scaller.transform([udp_input])
                 udp_result = udp_svm_model.predict([udp_scaled_input_data[0]])[0]
-                print(f"Predicted result : {udp_result}")
+                print(f"Predicted UDP flow result : {udp_result}")
+                if(udp_result == 1):
+                    udp_ddos = True
+                    udp_signature['port_dest'] = self.most_frequent(port_dest)
+                    udp_signature['len'] = self.most_frequent(len_pkt)
+                    udp_signature['payload_len'] = self.most_frequent(payload_len)
+                    print(f'Block UDP signature, signature : {udp_signature}')
+                else:
+                    udp_ddos = False
             
             # Read and parse icmp logfile
             icmp_network_log_file = open(icmp_file_name, 'r')
@@ -610,7 +648,14 @@ class DataParser(Thread):
                 icmp_input = [timestamp_std,ip_src_std,chksum_std,id_std,seq_std,payload_len_std,rate_connection]
                 icmp_scaled_input_data = icmp_svm_scaller.transform([icmp_input])
                 icmp_result = icmp_svm_model.predict([icmp_scaled_input_data[0]])[0]
-                print(f"Predicted result : {icmp_result}")
+                print(f"Predicted ICMP flow result : {icmp_result}")
+                if(icmp_result == 1):
+                    icmp_ddos = True
+                    icmp_signature['id'] = self.most_frequent(id)
+                    icmp_signature['payload_len'] = self.most_frequent(payload_len)
+                    print(f'Block ICMP signature, signature : {icmp_signature}')
+                else:
+                    icmp_ddos = False
             
             # Flush logfiles
             with open(tcp_file_name, 'w'):
@@ -628,6 +673,10 @@ class DataParser(Thread):
             # Sleep 5 second
             time.sleep(self.sleep_time)
     
+    def most_frequent(self, List):
+        occurence_count = Counter(List)
+        return occurence_count.most_common(1)[0][0]
+
     def StringToBytes(self, data):
         sum = 0
         arrbytes = bytes(data, 'utf-8')
