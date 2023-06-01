@@ -20,19 +20,19 @@ from keras.models import load_model
 
 firewall_name = "node-firewall"
 
-tcp_svm_model = joblib.load('model/model_svm_tcp.sav')
-tcp_svm_scaller = joblib.load('scaler/scaler_svm_tcp.sav')
-udp_svm_model = joblib.load('model/model_svm_udp.sav')
-udp_svm_scaller = joblib.load('scaler/scaler_svm_udp.sav')
-icmp_svm_model = joblib.load('model/model_svm_icmp.sav')
-icmp_svm_scaller = joblib.load('scaler/scaler_svm_icmp.sav')
+tcp_svm_model = joblib.load('./model/model_svm_tcp.sav')
+tcp_svm_scaller = joblib.load('./scaler/scaler_svm_tcp.save')
+udp_svm_model = joblib.load('./model/model_svm_udp.sav')
+udp_svm_scaller = joblib.load('./scaler/scaler_svm_udp.save')
+icmp_svm_model = joblib.load('./model/model_svm_icmp.sav')
+icmp_svm_scaller = joblib.load('./scaler/scaler_svm_icmp.save')
 
-tcp_lstm_scalar = joblib.load('scaler/scaler_lstm_tcp.save') 
-tcp_lstm_model = load_model('model/brnn_model_tcp.h5')
-udp_lstm_scalar = joblib.load('scaler/scaler_lstm_udp.save') 
-udp_lstm_model = load_model('model/brnn_model_udp.h5')
-icmp_lstm_scalar = joblib.load('scaler/scaler_lstm_icmp.save') 
-icmp_lstm_model = load_model('model/brnn_model_icmp.h5')
+tcp_lstm_scalar = joblib.load('./scaler/scaler_lstm_tcp.save') 
+tcp_lstm_model = load_model('./model/brnn_model_tcp.h5')
+udp_lstm_scalar = joblib.load('./scaler/scaler_lstm_udp.save') 
+udp_lstm_model = load_model('./model/brnn_model_udp.h5')
+icmp_lstm_scalar = joblib.load('./scaler/scaler_lstm_icmp.save') 
+icmp_lstm_model = load_model('./model/brnn_model_icmp.h5')
 
 # Traffic Signature
 tcp_signature = {
@@ -231,6 +231,9 @@ def firewall(pkt):
             tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
             # tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
             # tcp_timeseries_data.append(tcp_timeseries)
+            # if(len(tcp_timeseries_data) <= 25):
+                # tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len())]
+                # tcp_timeseries_data.append(tcp_timeseries)
     
     if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
@@ -247,6 +250,9 @@ def firewall(pkt):
             udp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.len)},{str(t.chksum)},{str(pkt.get_payload_len())}')
             # udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
             # udp_timeseries_data.append(udp_timeseries)
+            # if(len(udp_timeseries_data) <= 25):
+                # udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len())]
+                # udp_timeseries_data.append(udp_timeseries)
     
     if sca.haslayer(ICMP):
         t = sca.getlayer(ICMP)
@@ -263,6 +269,9 @@ def firewall(pkt):
             icmp_networklogger.info(f'{sca.src},{str(t.chksum)},{str(t.id)},{str(t.seq)},{str(pkt.get_payload_len())}')
             # icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len()), str(0)]
             # icmp_timeseries_data.append(icmp_timeseries)
+            # if(len(icmp_timeseries_data) <= 25):
+                # icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len())]
+                # icmp_timeseries_data.append(icmp_timeseries)
     
     # Forward packet to iptables
     pkt.accept()
@@ -643,7 +652,7 @@ class TimeseriesDataExporter(Thread):
         global icmp_lstm_scalar
 
         while True:
-            if(len(tcp_timeseries_data) == 26):
+            if(len(tcp_timeseries_data) >= 26):
                 # with open('dataset_tcp_timeseries.csv', 'a') as f_object:
                 #     writer_object = writer(f_object)
                 #     for data in tcp_timeseries_data:
@@ -651,7 +660,6 @@ class TimeseriesDataExporter(Thread):
                 #     f_object.close()
 
                 tcp_timeseries_data_temp = tcp_timeseries_data
-
                 for i in range(len(tcp_timeseries_data_temp)):
                     tcp_timeseries_data_temp[i][7] = self.StringToBytes(str(tcp_timeseries_data_temp[i][7]))
                 tcp_timeseries_data_temp = tcp_lstm_scalar.transform(tcp_timeseries_data_temp)
@@ -672,7 +680,7 @@ class TimeseriesDataExporter(Thread):
                 
                 tcp_timeseries_data_temp = []
                 tcp_timeseries_data = []
-            if(len(udp_timeseries_data) == 26):
+            if(len(udp_timeseries_data) >= 26):
                 # with open('dataset_udp_timeseries.csv', 'a') as f_object:
                 #     writer_object = writer(f_object)
                 #     for data in udp_timeseries_data:
@@ -680,9 +688,6 @@ class TimeseriesDataExporter(Thread):
                 #     f_object.close()
 
                 udp_timeseries_data_temp = udp_timeseries_data
-
-                for i in range(len(udp_timeseries_data_temp)):
-                    udp_timeseries_data_temp[i][7] = self.StringToBytes(str(udp_timeseries_data_temp[i][7]))
                 udp_timeseries_data_temp = udp_lstm_scalar.transform(udp_timeseries_data_temp)
 
                 features = len(udp_timeseries_data_temp[0])
@@ -701,7 +706,7 @@ class TimeseriesDataExporter(Thread):
                 
                 udp_timeseries_data_temp = []
                 udp_timeseries_data = []
-            if(len(icmp_timeseries_data) == 26):
+            if(len(icmp_timeseries_data) >= 26):
                 # with open('dataset_icmp_timeseries.csv', 'a') as f_object:
                 #     writer_object = writer(f_object)
                 #     for data in icmp_timeseries_data:
@@ -709,9 +714,6 @@ class TimeseriesDataExporter(Thread):
                 #     f_object.close()
 
                 icmp_timeseries_data_temp = icmp_timeseries_data
-
-                for i in range(len(icmp_timeseries_data_temp)):
-                    icmp_timeseries_data_temp[i][7] = self.StringToBytes(str(icmp_timeseries_data_temp[i][7]))
                 icmp_timeseries_data_temp = icmp_lstm_scalar.transform(icmp_timeseries_data_temp)
 
                 features = len(icmp_timeseries_data_temp[0])
@@ -810,8 +812,8 @@ if __name__ == "__main__":
         print(f"{firewall_name} is ready, creating traffic listener")
         dataParser1 = DataParser()
         dataParser1.start()
-        dataExporter1 = TimeseriesDataExporter()
-        dataExporter1.start()
+        # dataExporter1 = TimeseriesDataExporter()
+        # dataExporter1.start()
         nfqueue.run()
         while True:
             time.sleep(1)
