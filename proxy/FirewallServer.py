@@ -13,8 +13,10 @@ from csv import writer
 import statistics
 from statistics import mode
 import joblib
-from sklearn import svm
-from sklearn.preprocessing import StandardScaler
+from keras.models import load_model
+
+# from sklearn import svm
+# from sklearn.preprocessing import StandardScaler
 
 firewall_name = "node-firewall"
 
@@ -24,6 +26,13 @@ udp_svm_model = joblib.load('model/model_svm_udp.sav')
 udp_svm_scaller = joblib.load('scaler/scaler_svm_udp.sav')
 icmp_svm_model = joblib.load('model/model_svm_icmp.sav')
 icmp_svm_scaller = joblib.load('scaler/scaler_svm_icmp.sav')
+
+tcp_lstm_scalar = joblib.load('scaler/scaler_lstm_tcp.save') 
+tcp_lstm_model = load_model('model/brnn_model_tcp.h5')
+udp_lstm_scalar = joblib.load('scaler/scaler_lstm_udp.save') 
+udp_lstm_model = load_model('model/brnn_model_udp.h5')
+icmp_lstm_scalar = joblib.load('scaler/scaler_lstm_icmp.save') 
+icmp_lstm_model = load_model('model/brnn_model_icmp.h5')
 
 # Traffic Signature
 tcp_signature = {
@@ -626,29 +635,108 @@ class TimeseriesDataExporter(Thread):
         global tcp_timeseries_data
         global udp_timeseries_data
         global icmp_timeseries_data
+        global tcp_lstm_model
+        global udp_lstm_model
+        global icmp_lstm_model
+        global tcp_lstm_scalar
+        global udp_lstm_scalar
+        global icmp_lstm_scalar
 
         while True:
-            if(len(tcp_timeseries_data) >= 25):
-                with open('dataset_tcp_timeseries.csv', 'a') as f_object:
-                    writer_object = writer(f_object)
-                    for data in tcp_timeseries_data:
-                        writer_object.writerow(data)
-                    f_object.close()
+            if(len(tcp_timeseries_data) == 26):
+                # with open('dataset_tcp_timeseries.csv', 'a') as f_object:
+                #     writer_object = writer(f_object)
+                #     for data in tcp_timeseries_data:
+                #         writer_object.writerow(data)
+                #     f_object.close()
+
+                tcp_timeseries_data_temp = tcp_timeseries_data
+
+                for i in range(len(tcp_timeseries_data_temp)):
+                    tcp_timeseries_data_temp[i][7] = self.StringToBytes(str(tcp_timeseries_data_temp[i][7]))
+                tcp_timeseries_data_temp = tcp_lstm_scalar.transform(tcp_timeseries_data_temp)
+
+                features = len(tcp_timeseries_data_temp[0])
+                samples = tcp_timeseries_data_temp.shape[0]
+                train_len = 25
+                input_len = samples - train_len
+                I = np.zeros((samples - train_len, train_len, features))
+
+                for i in range(input_len):
+                    temp = np.zeros((train_len, features))
+                    for j in range(i, i + train_len - 1):
+                        temp[j-i] = tcp_timeseries_data_temp[j]
+                    I[i] = temp
+                tcp_predict = tcp_lstm_model.predict(I[:25], verbose=1)
+                print(tcp_predict)
+                
+                tcp_timeseries_data_temp = []
                 tcp_timeseries_data = []
-            if(len(udp_timeseries_data) >= 25):
-                with open('dataset_udp_timeseries.csv', 'a') as f_object:
-                    writer_object = writer(f_object)
-                    for data in udp_timeseries_data:
-                        writer_object.writerow(data)
-                    f_object.close()
+            if(len(udp_timeseries_data) == 26):
+                # with open('dataset_udp_timeseries.csv', 'a') as f_object:
+                #     writer_object = writer(f_object)
+                #     for data in udp_timeseries_data:
+                #         writer_object.writerow(data)
+                #     f_object.close()
+
+                udp_timeseries_data_temp = udp_timeseries_data
+
+                for i in range(len(udp_timeseries_data_temp)):
+                    udp_timeseries_data_temp[i][7] = self.StringToBytes(str(udp_timeseries_data_temp[i][7]))
+                udp_timeseries_data_temp = udp_lstm_scalar.transform(udp_timeseries_data_temp)
+
+                features = len(udp_timeseries_data_temp[0])
+                samples = udp_timeseries_data_temp.shape[0]
+                train_len = 25
+                input_len = samples - train_len
+                I = np.zeros((samples - train_len, train_len, features))
+
+                for i in range(input_len):
+                    temp = np.zeros((train_len, features))
+                    for j in range(i, i + train_len - 1):
+                        temp[j-i] = udp_timeseries_data_temp[j]
+                    I[i] = temp
+                udp_predict = udp_lstm_model.predict(I[:25], verbose=1)
+                print(udp_predict)
+                
+                udp_timeseries_data_temp = []
                 udp_timeseries_data = []
-            if(len(icmp_timeseries_data) >= 25):
-                with open('dataset_icmp_timeseries.csv', 'a') as f_object:
-                    writer_object = writer(f_object)
-                    for data in icmp_timeseries_data:
-                        writer_object.writerow(data)
-                    f_object.close()
+            if(len(icmp_timeseries_data) == 26):
+                # with open('dataset_icmp_timeseries.csv', 'a') as f_object:
+                #     writer_object = writer(f_object)
+                #     for data in icmp_timeseries_data:
+                #         writer_object.writerow(data)
+                #     f_object.close()
+
+                icmp_timeseries_data_temp = icmp_timeseries_data
+
+                for i in range(len(icmp_timeseries_data_temp)):
+                    icmp_timeseries_data_temp[i][7] = self.StringToBytes(str(icmp_timeseries_data_temp[i][7]))
+                icmp_timeseries_data_temp = icmp_lstm_scalar.transform(icmp_timeseries_data_temp)
+
+                features = len(icmp_timeseries_data_temp[0])
+                samples = icmp_timeseries_data_temp.shape[0]
+                train_len = 25
+                input_len = samples - train_len
+                I = np.zeros((samples - train_len, train_len, features))
+
+                for i in range(input_len):
+                    temp = np.zeros((train_len, features))
+                    for j in range(i, i + train_len - 1):
+                        temp[j-i] = icmp_timeseries_data_temp[j]
+                    I[i] = temp
+                icmp_predict = icmp_lstm_model.predict(I[:25], verbose=1)
+                print(icmp_predict)
+                
+                icmp_timeseries_data_temp = []
                 icmp_timeseries_data = []
+    
+    def StringToBytes(self, data):
+        sum = 0
+        arrbytes = bytes(data, 'utf-8')
+        for i in arrbytes:
+            sum = sum + i
+        return(sum)
 
 class LoggerFilter(object):
     def __init__(self, level):
