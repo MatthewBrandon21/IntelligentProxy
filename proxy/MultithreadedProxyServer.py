@@ -706,7 +706,7 @@ class DataParser(Thread):
                                     print(f"IP : {ip_data[0][5]}, Predicted result : {result}")
                                     if(result == "1"):
                                         print(f"Modify firewall rules to banned ip {ip_data[0][5]}")
-                                        with open("FirewallRulesClone.json", "r+") as jsonFile:
+                                        with open("FirewallRules.json", "r+") as jsonFile:
                                             data = json.load(jsonFile)
                                             data["ListOfBannedIpAddr"].append(ip_data[0][5])
                                             jsonFile.seek(0)  # rewind
