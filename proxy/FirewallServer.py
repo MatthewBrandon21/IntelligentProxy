@@ -285,7 +285,7 @@ def firewall(pkt):
                 # icmp_timeseries_data.append(icmp_timeseries)
             if(icmp_ddos):
                 if(icmp_comparator(pkt, t)):
-                    print(f'UDP packet blocked, ip src : {sca.src}')
+                    print(f'ICMP packet blocked, ip src : {sca.src}')
                     pkt.drop()
                     return
     
