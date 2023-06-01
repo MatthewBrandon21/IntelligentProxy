@@ -13,7 +13,7 @@ from csv import writer
 import statistics
 from statistics import mode
 import joblib
-from keras.models import load_model
+# from keras.models import load_model
 from collections import Counter
 
 # from sklearn import svm
@@ -28,12 +28,12 @@ udp_svm_scaller = joblib.load('./scaler/scaler_svm_udp.save')
 icmp_svm_model = joblib.load('./model/model_svm_icmp.sav')
 icmp_svm_scaller = joblib.load('./scaler/scaler_svm_icmp.save')
 
-tcp_lstm_scalar = joblib.load('./scaler/scaler_lstm_tcp.save') 
-tcp_lstm_model = load_model('./model/brnn_model_tcp.h5')
-udp_lstm_scalar = joblib.load('./scaler/scaler_lstm_udp.save') 
-udp_lstm_model = load_model('./model/brnn_model_udp.h5')
-icmp_lstm_scalar = joblib.load('./scaler/scaler_lstm_icmp.save') 
-icmp_lstm_model = load_model('./model/brnn_model_icmp.h5')
+# tcp_lstm_scalar = joblib.load('./scaler/scaler_lstm_tcp.save') 
+# tcp_lstm_model = load_model('./model/brnn_model_tcp.h5')
+# udp_lstm_scalar = joblib.load('./scaler/scaler_lstm_udp.save') 
+# udp_lstm_model = load_model('./model/brnn_model_udp.h5')
+# icmp_lstm_scalar = joblib.load('./scaler/scaler_lstm_icmp.save') 
+# icmp_lstm_model = load_model('./model/brnn_model_icmp.h5')
 
 # Traffic Signature
 tcp_signature = {
@@ -297,30 +297,30 @@ def find_most(List):
 
 def tcp_comparator(pkt, t):
     global tcp_signature
-    if(tcp_signature['port_dest'] == t.dport and
-       tcp_signature['dataofs'] == t.dataofs and
-       tcp_signature['reserved'] == t.reserved and
+    if(tcp_signature['port_dest'] == int(t.dport) and
+       tcp_signature['dataofs'] == int(t.dataofs) and
+       tcp_signature['reserved'] == int(t.reserved) and
        tcp_signature['flags'] == str(t.flags) and
-       tcp_signature['window'] == t.window and
-       tcp_signature['urgptr'] == t.urgptr and
-       tcp_signature['payload_len'] == pkt.get_payload_len()):
+       tcp_signature['window'] == int(t.window) and
+       tcp_signature['urgptr'] == int(t.urgptr) and
+       tcp_signature['payload_len'] == int(pkt.get_payload_len())):
         return True
     else:
         return False
 
 def udp_comparator(pkt, t):
     global udp_signature
-    if(udp_signature['port_dest'] == t.dport and
-       udp_signature['len'] == t.len and
-       udp_signature['payload_len'] == pkt.get_payload_len()):
+    if(udp_signature['port_dest'] == int(t.dport) and
+       udp_signature['len'] == int(t.len) and
+       udp_signature['payload_len'] == int(pkt.get_payload_len())):
         return True
     else:
         return False
 
 def icmp_comparator(pkt, t):
     global icmp_signature
-    if(icmp_signature['id'] == t.id and
-       icmp_signature['payload_len'] == pkt.get_payload_len()):
+    if(icmp_signature['id'] == int(t.id) and
+       icmp_signature['payload_len'] == int(pkt.get_payload_len())):
         return True
     else:
         return False
@@ -353,6 +353,9 @@ class DataParser(Thread):
         global udp_svm_scaller
         global icmp_svm_model
         global icmp_svm_scaller
+        global tcp_ddos
+        global udp_ddos
+        global icmp_ddos
 
         while True:
             # Array for save raw data from file
@@ -472,7 +475,7 @@ class DataParser(Thread):
                 tcp_scaled_input_data = tcp_svm_scaller.transform([tcp_input])
                 tcp_result = tcp_svm_model.predict([tcp_scaled_input_data[0]])[0]
                 print(f"Predicted TCP flow result : {tcp_result}")
-                if(tcp_result == 1):
+                if(tcp_result == "1"):
                     tcp_ddos = True
                     tcp_signature['port_dest'] = self.most_frequent(port_dest)
                     tcp_signature['dataofs'] = self.most_frequent(dataofs)
@@ -565,7 +568,7 @@ class DataParser(Thread):
                 udp_scaled_input_data = udp_svm_scaller.transform([udp_input])
                 udp_result = udp_svm_model.predict([udp_scaled_input_data[0]])[0]
                 print(f"Predicted UDP flow result : {udp_result}")
-                if(udp_result == 1):
+                if(udp_result == "1"):
                     udp_ddos = True
                     udp_signature['port_dest'] = self.most_frequent(port_dest)
                     udp_signature['len'] = self.most_frequent(len_pkt)
@@ -649,7 +652,7 @@ class DataParser(Thread):
                 icmp_scaled_input_data = icmp_svm_scaller.transform([icmp_input])
                 icmp_result = icmp_svm_model.predict([icmp_scaled_input_data[0]])[0]
                 print(f"Predicted ICMP flow result : {icmp_result}")
-                if(icmp_result == 1):
+                if(icmp_result == "1"):
                     icmp_ddos = True
                     icmp_signature['id'] = self.most_frequent(id)
                     icmp_signature['payload_len'] = self.most_frequent(payload_len)
