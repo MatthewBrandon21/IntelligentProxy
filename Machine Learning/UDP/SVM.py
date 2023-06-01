@@ -51,8 +51,8 @@ def train_svm():
     X_train = sc.fit_transform(features_train)
     X_test = sc.transform(features_test)
 
-    print(features_train)
-    print(X_train)
+    # print(features_train)
+    # print(X_train)
 
     # svm_inst.fit(features_train, labels_train)
     svm_inst.fit(X_train, labels_train)
@@ -63,8 +63,8 @@ def train_svm():
     cm = confusion_matrix(labels_test,labels_pred)
     sns.heatmap(cm, annot=True, fmt='d').set_title('Confusion matrix of linear SVM') # fmt='d' formats the numbers as digits, which means integers
 
-    print(labels_pred)
-    print(labels_test)
+    # print(labels_pred)
+    # print(labels_test)
     print(cm)
 
     print(classification_report(labels_test,labels_pred))
@@ -92,6 +92,6 @@ print(f"Time elapse for prediction : {time.perf_counter() - time_start}")
 print(f"Correct result : {labels_test[14]}")
 print(f"Predicted result : {result}")
 
-# #Save the model
-# filename = 'finalized_model.sav'
-# joblib.dump(svm_inst, filename)
+#Save the model and scaler
+joblib.dump(svm_inst, 'model_svm_udp.sav')
+joblib.dump(sc, 'scaler_svm_udp.save') 
