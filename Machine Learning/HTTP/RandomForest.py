@@ -15,8 +15,9 @@ import time
 
 num_of_category = 2
 features, labels = [], []
-training_files = ["Dataset/dataset_icmp_attack.csv",
-                  "Dataset/dataset_icmp_normal.csv"]
+training_files = ["Dataset/dataset_http_attack.csv",
+                  "Dataset/dataset_http_normal_1.csv",
+                  "Dataset/dataset_http_normal_2.csv"]
 
 def scrape_data():
     global training_files
@@ -28,7 +29,7 @@ def scrape_data():
         meal = open(fname, "rt")
         for line in meal:
             data_list = line.rsplit(",")
-            if(len(data_list) != 8):
+            if(len(data_list) != 12):
                 print("error data")
             else:
                 data_list[(len(data_list)-1)]=data_list[(len(data_list)-1)].replace('\n', '')

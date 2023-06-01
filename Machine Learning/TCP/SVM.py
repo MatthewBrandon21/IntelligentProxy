@@ -94,5 +94,5 @@ print(f"Correct result : {labels_test[2]}")
 print(f"Predicted result : {result}")
 
 # #Save the model
-joblib.dump(svm_inst, 'model_svm_udp.sav')
-joblib.dump(sc, 'scaler_svm_udp.save') 
+joblib.dump(svm_inst, 'model_svm_tcp.sav')
+joblib.dump(sc, 'scaler_svm_tcp.save') 
