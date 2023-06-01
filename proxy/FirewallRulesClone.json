@@ -1,0 +1,1 @@
+{"ListOfBannedIpAddr": ["192.168.43.181", "192.168.43.182", "192.168.1.1"], "ListOfWebserverIpAddr": ["192.168.29.137", "192.168.29.138"], "ListOfWebserverPorts": [3001, 3002, 3003, 3004], "ListOfBannedPorts": [80, 81], "ListOfBannedPrefixes": ["172."], "firewallName": "node1-firewall"}

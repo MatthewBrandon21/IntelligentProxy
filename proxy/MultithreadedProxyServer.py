@@ -703,7 +703,15 @@ class DataParser(Thread):
                                     input_data = [timestamp_std, no_thread_std, connection_time_std, r_bytes_std, r_bytes_sum, port_src_std, port_dest_std, status_std, url_std, connection_timeout_std, rate_connection]
                                     scaled_input_data = http_scaller.transform([input_data])
                                     result = http_model.predict([scaled_input_data[0]])[0]
-                                    print(f"Predicted result : {result}")
+                                    print(f"IP : {ip_data[0][5]}, Predicted result : {result}")
+                                    if(result == "1"):
+                                        print(f"Modify firewall rules to banned ip {ip_data[0][5]}")
+                                        with open("FirewallRulesClone.json", "r+") as jsonFile:
+                                            data = json.load(jsonFile)
+                                            data["ListOfBannedIpAddr"].append(ip_data[0][5])
+                                            jsonFile.seek(0)  # rewind
+                                            json.dump(data, jsonFile)
+                                            jsonFile.truncate()
             
             # Flush logfile
             with open(self.file_name, 'w'):
