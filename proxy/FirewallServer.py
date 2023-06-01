@@ -13,6 +13,8 @@ from csv import writer
 import statistics
 from statistics import mode
 import joblib
+from sklearn import svm
+from sklearn.preprocessing import StandardScaler
 
 firewall_name = "node-firewall"
 
