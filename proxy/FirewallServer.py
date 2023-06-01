@@ -12,8 +12,16 @@ import csv
 from csv import writer
 import statistics
 from statistics import mode
+import joblib
 
 firewall_name = "node-firewall"
+
+tcp_svm_model = joblib.load('model/model_svm_tcp.sav')
+tcp_svm_scaller = joblib.load('scaler/scaler_svm_tcp.sav')
+udp_svm_model = joblib.load('model/model_svm_udp.sav')
+udp_svm_scaller = joblib.load('scaler/scaler_svm_udp.sav')
+icmp_svm_model = joblib.load('model/model_svm_icmp.sav')
+icmp_svm_scaller = joblib.load('scaler/scaler_svm_icmp.sav')
 
 # Traffic Signature
 tcp_signature = {
@@ -210,8 +218,8 @@ def firewall(pkt):
             # }
             # print(f"sca TCP, connection : {t}, data : {t.fields}, flags: {t.fields['flags']}, timestamp : {pkt.get_timestamp()}, len : {pkt.get_payload_len()}")
             tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
-            tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
-            tcp_timeseries_data.append(tcp_timeseries)
+            # tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
+            # tcp_timeseries_data.append(tcp_timeseries)
     
     if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
@@ -226,8 +234,8 @@ def firewall(pkt):
             # }
             # print(f"sca UDP, connection : {t}, data : {t.fields}, timestamp : {pkt.get_timestamp()}, len : {pkt.get_payload_len()}")
             udp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.len)},{str(t.chksum)},{str(pkt.get_payload_len())}')
-            udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
-            udp_timeseries_data.append(udp_timeseries)
+            # udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
+            # udp_timeseries_data.append(udp_timeseries)
     
     if sca.haslayer(ICMP):
         t = sca.getlayer(ICMP)
@@ -242,8 +250,8 @@ def firewall(pkt):
             # }
             # print(f"sca ICMP, connection : {t}, data : {t.fields}, timestamp : {pkt.get_timestamp()}, len : {pkt.get_payload_len()}")
             icmp_networklogger.info(f'{sca.src},{str(t.chksum)},{str(t.id)},{str(t.seq)},{str(pkt.get_payload_len())}')
-            icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len()), str(0)]
-            icmp_timeseries_data.append(icmp_timeseries)
+            # icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len()), str(0)]
+            # icmp_timeseries_data.append(icmp_timeseries)
     
     # Forward packet to iptables
     pkt.accept()
@@ -303,6 +311,12 @@ class DataParser(Thread):
         global tcp_file_name
         global udp_file_name
         global icmp_file_name
+        global tcp_svm_model
+        global tcp_svm_scaller
+        global udp_svm_model
+        global udp_svm_scaller
+        global icmp_svm_model
+        global icmp_svm_scaller
 
         while True:
             # Array for save raw data from file
@@ -382,39 +396,44 @@ class DataParser(Thread):
                 payload_len_std = np.std(payload_len)
                 rate_connection = total_connection_sum
 
-                # Label : 0 Normal, 1 TCP flood
-                label = 0
+                # # Label : 0 Normal, 1 TCP flood
+                # label = 0
 
-                #Creating headers
-                randvar1 = "timestamp_std"
-                randvar2 = "ip_src_std"
-                randvar3 = "port_src_std"
-                randvar4 = "port_dest_std"
-                randvar5 = "seq_std"
-                randvar6 = "ack_std"
-                randvar7 = "dataofs_std"
-                randvar8 = "reserved_std"
-                randvar9 = "flags_std"
-                randvar10 = "window_std"
-                randvar11 = "chksum_std"
-                randvar12 = "urgptr_std"
-                randvar13 = "payload_len_std"
-                randvar14 = "rate_connection"
-                randvar15 = "label"
+                # #Creating headers
+                # randvar1 = "timestamp_std"
+                # randvar2 = "ip_src_std"
+                # randvar3 = "port_src_std"
+                # randvar4 = "port_dest_std"
+                # randvar5 = "seq_std"
+                # randvar6 = "ack_std"
+                # randvar7 = "dataofs_std"
+                # randvar8 = "reserved_std"
+                # randvar9 = "flags_std"
+                # randvar10 = "window_std"
+                # randvar11 = "chksum_std"
+                # randvar12 = "urgptr_std"
+                # randvar13 = "payload_len_std"
+                # randvar14 = "rate_connection"
+                # randvar15 = "label"
 
-                header = []
-                header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8,randvar9,randvar10,randvar11,randvar12,randvar13,randvar14,randvar15]
+                # header = []
+                # header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8,randvar9,randvar10,randvar11,randvar12,randvar13,randvar14,randvar15]
 
-                smart = []
-                smart = [timestamp_std,ip_src_std,port_src_std,port_dest_std,seq_std,ack_std,dataofs_std,reserved_std,flags_std,window_std,chksum_std,urgptr_std,payload_len_std,rate_connection,label]
+                # smart = []
+                # smart = [timestamp_std,ip_src_std,port_src_std,port_dest_std,seq_std,ack_std,dataofs_std,reserved_std,flags_std,window_std,chksum_std,urgptr_std,payload_len_std,rate_connection,label]
                 
-                # Append to dataset file
-                with open('dataset_tcp.csv', 'a') as datafile:
-                    writer = csv.writer(datafile, delimiter=",")
-                    # writer.writerow(header)
-                    writer.writerow(smart)
+                # # Append to dataset file
+                # with open('dataset_tcp.csv', 'a') as datafile:
+                #     writer = csv.writer(datafile, delimiter=",")
+                #     # writer.writerow(header)
+                #     writer.writerow(smart)
 
-                datafile.close()
+                # datafile.close()
+
+                tcp_input = [timestamp_std,ip_src_std,port_src_std,port_dest_std,seq_std,ack_std,dataofs_std,reserved_std,flags_std,window_std,chksum_std,urgptr_std,payload_len_std,rate_connection]
+                tcp_scaled_input_data = tcp_svm_scaller.transform([tcp_input])
+                tcp_result = tcp_svm_model.predict([tcp_scaled_input_data[0]])[0]
+                print(f"Predicted result : {tcp_result}")
             
             # Read and parse udp logfile
             udp_network_log_file = open(udp_file_name, 'r')
@@ -464,33 +483,38 @@ class DataParser(Thread):
                 payload_len_std = np.std(payload_len)
                 rate_connection = total_connection_sum
 
-                # Label : 0 Normal, 1 UDP flood
-                label = 0
+                # # Label : 0 Normal, 1 UDP flood
+                # label = 0
 
-                #Creating headers
-                randvar1 = "timestamp_std"
-                randvar2 = "ip_src_std"
-                randvar3 = "port_src_std"
-                randvar4 = "port_dest_std"
-                randvar5 = "len_std"
-                randvar6 = "chksum_std"
-                randvar7 = "payload_len_std"
-                randvar8 = "rate_connection"
-                randvar9 = "label"
+                # #Creating headers
+                # randvar1 = "timestamp_std"
+                # randvar2 = "ip_src_std"
+                # randvar3 = "port_src_std"
+                # randvar4 = "port_dest_std"
+                # randvar5 = "len_std"
+                # randvar6 = "chksum_std"
+                # randvar7 = "payload_len_std"
+                # randvar8 = "rate_connection"
+                # randvar9 = "label"
 
-                header = []
-                header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8,randvar9]
+                # header = []
+                # header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8,randvar9]
 
-                smart = []
-                smart = [timestamp_std,ip_src_std,port_src_std,port_dest_std,len_std,chksum_std,payload_len_std,rate_connection,label]
+                # smart = []
+                # smart = [timestamp_std,ip_src_std,port_src_std,port_dest_std,len_std,chksum_std,payload_len_std,rate_connection,label]
                 
-                # Append to dataset file
-                with open('dataset_udp.csv', 'a') as datafile:
-                    writer = csv.writer(datafile, delimiter=",")
-                    # writer.writerow(header)
-                    writer.writerow(smart)
+                # # Append to dataset file
+                # with open('dataset_udp.csv', 'a') as datafile:
+                #     writer = csv.writer(datafile, delimiter=",")
+                #     # writer.writerow(header)
+                #     writer.writerow(smart)
 
-                datafile.close()
+                # datafile.close()
+
+                udp_input = [timestamp_std,ip_src_std,port_src_std,port_dest_std,len_std,chksum_std,payload_len_std,rate_connection]
+                udp_scaled_input_data = udp_svm_scaller.transform([udp_input])
+                udp_result = udp_svm_model.predict([udp_scaled_input_data[0]])[0]
+                print(f"Predicted result : {udp_result}")
             
             # Read and parse icmp logfile
             icmp_network_log_file = open(icmp_file_name, 'r')
@@ -536,32 +560,37 @@ class DataParser(Thread):
                 payload_len_std = np.std(payload_len)
                 rate_connection = total_connection_sum
 
-                # Label : 0 Normal, 1 ICMP flood
-                label = 0
+                # # Label : 0 Normal, 1 ICMP flood
+                # label = 0
 
-                #Creating headers
-                randvar1 = "timestamp_std"
-                randvar2 = "ip_src_std"
-                randvar3 = "chksum_std"
-                randvar4 = "id_std"
-                randvar5 = "seq_std"
-                randvar6 = "payload_len_std"
-                randvar7 = "rate_connection"
-                randvar8 = "label"
+                # #Creating headers
+                # randvar1 = "timestamp_std"
+                # randvar2 = "ip_src_std"
+                # randvar3 = "chksum_std"
+                # randvar4 = "id_std"
+                # randvar5 = "seq_std"
+                # randvar6 = "payload_len_std"
+                # randvar7 = "rate_connection"
+                # randvar8 = "label"
 
-                header = []
-                header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8]
+                # header = []
+                # header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8]
 
-                smart = []
-                smart = [timestamp_std,ip_src_std,chksum_std,id_std,seq_std,payload_len_std,rate_connection,label]
+                # smart = []
+                # smart = [timestamp_std,ip_src_std,chksum_std,id_std,seq_std,payload_len_std,rate_connection,label]
                 
-                # Append to dataset file
-                with open('dataset_icmp.csv', 'a') as datafile:
-                    writer = csv.writer(datafile, delimiter=",")
-                    # writer.writerow(header)
-                    writer.writerow(smart)
+                # # Append to dataset file
+                # with open('dataset_icmp.csv', 'a') as datafile:
+                #     writer = csv.writer(datafile, delimiter=",")
+                #     # writer.writerow(header)
+                #     writer.writerow(smart)
 
-                datafile.close()
+                # datafile.close()
+
+                icmp_input = [timestamp_std,ip_src_std,chksum_std,id_std,seq_std,payload_len_std,rate_connection]
+                icmp_scaled_input_data = icmp_svm_scaller.transform([icmp_input])
+                icmp_result = icmp_svm_model.predict([icmp_scaled_input_data[0]])[0]
+                print(f"Predicted result : {icmp_result}")
             
             # Flush logfiles
             with open(tcp_file_name, 'w'):

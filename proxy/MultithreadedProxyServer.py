@@ -19,8 +19,12 @@ import numpy as np
 import csv
 import pandas as pd
 import itertools
+import joblib
 
 proxy_name = "node-proxy"
+
+http_model = joblib.load('model/model_svm_http.sav')
+http_scaller = joblib.load('scaler/scaler_svm_http.sav')
 
 class Server(Thread):
     def __init__(self, config):
@@ -587,6 +591,9 @@ class DataParser(Thread):
         self.data_count = 11
 
     def run(self):
+        global http_model
+        global http_scaller
+
         while True:
             # Array for save raw data from file
             raw_datas = []
@@ -661,35 +668,40 @@ class DataParser(Thread):
                                     rate_connection = total_connection_sum
 
                                     # Label : 0 Normal, 1 HTTP flood
-                                    label = 0
+                                    # label = 0
 
                                     #Creating headers
-                                    randvar1 = "timestamp_std"
-                                    randvar2 = "no_thread_std"
-                                    randvar3 = "connection_time_std"
-                                    randvar4 = "r_bytes_std"
-                                    randvar5 = "r_bytes_sum"
-                                    randvar6 = "port_src_std"
-                                    randvar7 = "port_dest_std"
-                                    randvar8 = "status_std"
-                                    randvar9 = "url_std"
-                                    randvar10 = "connection_timeout_std"
-                                    randvar11 = "rate_connection"
-                                    randvar12 = "label"
+                                    # randvar1 = "timestamp_std"
+                                    # randvar2 = "no_thread_std"
+                                    # randvar3 = "connection_time_std"
+                                    # randvar4 = "r_bytes_std"
+                                    # randvar5 = "r_bytes_sum"
+                                    # randvar6 = "port_src_std"
+                                    # randvar7 = "port_dest_std"
+                                    # randvar8 = "status_std"
+                                    # randvar9 = "url_std"
+                                    # randvar10 = "connection_timeout_std"
+                                    # randvar11 = "rate_connection"
+                                    # randvar12 = "label"
 
-                                    header = []
-                                    header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8,randvar9,randvar10,randvar11,randvar12]
+                                    # header = []
+                                    # header = [randvar1,randvar2,randvar3,randvar4,randvar5,randvar6,randvar7,randvar8,randvar9,randvar10,randvar11,randvar12]
 
-                                    smart = []
-                                    smart = [timestamp_std, no_thread_std, connection_time_std, r_bytes_std, r_bytes_sum, port_src_std, port_dest_std, status_std, url_std, connection_timeout_std, rate_connection, label]
+                                    # smart = []
+                                    # smart = [timestamp_std, no_thread_std, connection_time_std, r_bytes_std, r_bytes_sum, port_src_std, port_dest_std, status_std, url_std, connection_timeout_std, rate_connection, label]
                                     
                                     # Append to dataset file
-                                    with open('dataset_http.csv', 'a') as datafile:
-                                        writer = csv.writer(datafile, delimiter=",")
-                                        # writer.writerow(header)
-                                        writer.writerow(smart)
+                                    # with open('dataset_http.csv', 'a') as datafile:
+                                    #     writer = csv.writer(datafile, delimiter=",")
+                                    #     # writer.writerow(header)
+                                    #     writer.writerow(smart)
 
-                                    datafile.close()
+                                    # datafile.close()
+
+                                    input_data = [timestamp_std, no_thread_std, connection_time_std, r_bytes_std, r_bytes_sum, port_src_std, port_dest_std, status_std, url_std, connection_timeout_std, rate_connection]
+                                    scaled_input_data = http_scaller.transform([input_data])
+                                    result = http_model.predict([scaled_input_data[0]])[0]
+                                    print(f"Predicted result : {result}")
             
             # Flush logfile
             with open(self.file_name, 'w'):
