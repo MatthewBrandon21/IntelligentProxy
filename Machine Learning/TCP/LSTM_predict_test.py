@@ -16,6 +16,7 @@ from sklearn.metrics import confusion_matrix
 
 from keras.models import load_model
 import joblib
+import time
 
 def StringToBytes(data):
     sum = 0
@@ -24,7 +25,7 @@ def StringToBytes(data):
         sum = sum + i
     return(sum)
 
-number_of_samples = 26
+number_of_samples = 101
 
 data_normal_1 = pd.read_csv('Dataset/dataset_tcp_timeseries_attack_1.csv', nrows = number_of_samples)
 
@@ -44,7 +45,10 @@ Y=Y_normal_1
 for i in range(len(X)):
     X[i][7] = StringToBytes(str(X[i][7]))
 
-scalar = joblib.load('scaler.save') 
+scalar = joblib.load('scaler_lstm_tcp.save') 
+model = load_model('brnn_model_100_step.h5')
+
+time_start = time.perf_counter()
 X = scalar.transform(X)
 
 print(np.shape(X))
@@ -52,7 +56,7 @@ print(np.shape(Y))
 
 features = len(X[0])
 samples = X.shape[0]
-train_len = 25
+train_len = 100
 input_len = samples - train_len
 I = np.zeros((samples - train_len, train_len, features))
 
@@ -64,7 +68,6 @@ for i in range(input_len):
 
 print(I.shape)
 
-model = load_model('brnn_model.h5')
-
-predict = model.predict(I[:25], verbose=1)
+predict = model.predict(I[:100], verbose=1)
+print(f"Time elapse for prediction : {time.perf_counter() - time_start}")
 print(predict)

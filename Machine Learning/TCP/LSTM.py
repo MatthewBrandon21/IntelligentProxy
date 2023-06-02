@@ -74,7 +74,7 @@ print(np.shape(Y))
 
 features = len(X[0])
 samples = X.shape[0]
-train_len = 25
+train_len = 100
 input_len = samples - train_len
 I = np.zeros((samples - train_len, train_len, features))
 
@@ -86,7 +86,7 @@ for i in range(input_len):
 
 print(I.shape)
 
-X_train, X_test, Y_train, Y_test = train_test_split(I, Y[25:], test_size = 0.2)
+X_train, X_test, Y_train, Y_test = train_test_split(I, Y[100:], test_size = 0.2)
 
 def create_baseline():
     model = Sequential()
@@ -147,9 +147,9 @@ to_heat_map = pd.DataFrame(to_heat_map, index = ["Attack","Normal"],columns = ["
 ax = sns.heatmap(to_heat_map,annot=True, fmt="d")
 
 figure = ax.get_figure()    
-figure.savefig('confusion_matrix_BRNN.png', dpi=400)
+figure.savefig('confusion_matrix_BRNN_100.png', dpi=400)
 
-model.save('brnn_model.h5')
+model.save('brnn_model_100_step.h5')
 
 scores = model.evaluate(X_test, Y_test, verbose=0)
 print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
