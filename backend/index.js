@@ -5,6 +5,8 @@ const ORMService = require("./services/ORMService");
 
 const dem = require("./services/DemocracyService");
 
+const cron = require("./services/CronService");
+
 const app = express();
 const ormService = new ORMService();
 

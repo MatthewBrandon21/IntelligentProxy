@@ -15,6 +15,10 @@
         "timestamp": "value",
         "expired": "value"
       }
+    },
+    {
+      "name": "myModel",
+      "schema": "https://schema.org/v1/myModel"
     }
   ]
 }
