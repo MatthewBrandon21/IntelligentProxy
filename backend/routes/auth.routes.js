@@ -7,11 +7,15 @@ module.exports = function (app) {
     next();
   });
 
-  app.post("/api/auth/signup", function (req, res) {
-    [verifySignUp.checkDuplicateUsernameOrEmail], controller.signup;
-  });
+  // app.post("/api/auth/signup", function (req, res) {
+  //   [verifySignUp.checkDuplicateUsernameOrEmail], controller.signup;
+  // });
 
-  app.post("/api/auth/signin", function (req, res) {
-    controller.signin;
-  });
+  // app.post("/api/auth/signin", function (req, res) {
+  //   controller.signin;
+  // });
+
+  app.post("/api/auth/signup", [verifySignUp.checkDuplicateUsernameOrEmail], controller.createUser);
+
+  app.post("/api/auth/signin", controller.signInUser);
 };

@@ -1,34 +1,24 @@
+const CRABService = require("../services/CRABService");
+
+const crabService = new CRABService("myModel");
+
 checkDuplicateUsernameOrEmail = (req, res, next) => {
-  // Username
-  User.findOne({
-    username: req.body.username,
-  }).exec((err, user) => {
-    if (err) {
-      res.status(500).send({ message: err });
-      return;
-    }
-
-    if (user) {
-      res.status(400).send({ message: "Failed! Username is already in use!" });
-      return;
-    }
-
-    // Email
-    User.findOne({
-      email: req.body.email,
-    }).exec((err, user) => {
-      if (err) {
-        res.status(500).send({ message: err });
-        return;
+  crabService.retrieveAllAssets().then((value) => {
+    let status = false;
+    value.map((asset) => {
+      if (asset.data.username === req.body.username) {
+        status = true;
+        return res.status(404).send({ message: "Failed! Username is already in use!" });
       }
 
-      if (user) {
-        res.status(400).send({ message: "Failed! Email is already in use!" });
-        return;
+      if (asset.data.email === req.body.email) {
+        status = true;
+        return res.status(404).send({ message: "Failed! Email is already in use!" });
       }
-
-      next();
     });
+    if (status == false) {
+      next();
+    }
   });
 };
 

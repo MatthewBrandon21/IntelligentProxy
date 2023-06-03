@@ -5,7 +5,7 @@ const ORMService = require("./services/ORMService");
 
 const dem = require("./services/DemocracyService");
 
-const cron = require("./services/CronService");
+// const cron = require("./services/CronService");
 
 const app = express();
 const ormService = new ORMService();
@@ -40,6 +40,7 @@ require("./routes/auth.routes")(app);
 require("./routes/user.routes")(app);
 require("./routes/firewall.routes")(app);
 require("./routes/proxy.routes")(app);
+require("./routes/log.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 5000;

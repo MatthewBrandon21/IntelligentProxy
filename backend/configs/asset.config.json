@@ -3,21 +3,39 @@
     {
       "name": "user",
       "schema": {
-        "username": "value",
-        "email": "value",
-        "password": "value"
+        "username": "string",
+        "email": "string",
+        "password": "string",
+        "publicKey": "string",
+        "privateKey": "string"
       }
     },
     {
       "name": "firewall",
       "schema": {
-        "ip": "value",
-        "timestamp": "value",
-        "expired": "value"
+        "ip": "string",
+        "source": "string",
+        "timestamp": "string"
+      }
+    },
+    {
+      "name": "log",
+      "schema": {
+        "nodeName": "string",
+        "message": "string",
+        "timestamp": "string"
       }
     },
     {
       "name": "myModel",
+      "schema": "https://schema.org/v1/myModel"
+    },
+    {
+      "name": "myModel2",
+      "schema": "https://schema.org/v1/myModel"
+    },
+    {
+      "name": "myModel3",
       "schema": "https://schema.org/v1/myModel"
     }
   ]

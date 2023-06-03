@@ -1,4 +1,5 @@
 const { authJwt } = require("../middlewares");
+const { verifySignUp } = require("../middlewares");
 const controller = require("../controllers/user.controller");
 
 module.exports = function (app) {
@@ -7,19 +8,17 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/test/all", function (req, res) {
-    controller.allAccess;
-  });
+  app.get("/api/user/all", controller.allAccess);
 
-  app.get("/api/test/user", function (req, res) {
-    [authJwt.verifyToken], controller.userBoard;
-  });
+  app.get("/api/user/data", [authJwt.verifyToken], controller.getAllData);
 
-  app.get("/api/test/mod", function (req, res) {
-    [authJwt.verifyToken, authJwt.isModerator], controller.moderatorBoard;
-  });
+  app.post("/api/user", [verifySignUp.checkDuplicateUsernameOrEmail], controller.create);
 
-  app.get("/api/test/admin", function (req, res) {
-    [authJwt.verifyToken, authJwt.isAdmin], controller.adminBoard;
-  });
+  app.get("/api/user", controller.findAll);
+
+  app.get("/api/user/:username", controller.findOne);
+
+  app.put("/api/user/:username", controller.update);
+
+  app.delete("/api/user/:username", controller.delete);
 };
