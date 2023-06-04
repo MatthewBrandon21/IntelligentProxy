@@ -7,9 +7,7 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/log/all", controller.allAccess);
-
-  app.get("/api/log/data", [authJwt.verifyToken], controller.getAllData);
+  // app.get("/api/log/data", [authJwt.verifyToken], controller.getAllData);
 
   app.post("/api/log", controller.create);
 

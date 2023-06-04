@@ -10,23 +10,33 @@ let firewallRules = require("../FirewallRulesClone.json");
 cron.schedule("* * * * *", () => {
   console.log("Checking firewall blockchain");
   crabService.retrieveAllAssets().then((value) => {
-    // res.json(value);
-    // res.json(value.map((asset) => asset.data));
-    // console.log(firewallRules.ListOfBannedIpAddr);
-    // console.log(firewallRules.ListOfBannedIpAddr.map((ip) => ip));
+    let status = false;
     value.map((asset) => {
-      if (firewallRules.ListOfBannedIpAddr.includes(asset.data.ipAddress) == false) {
-        if (asset.data.status != "BURNED") {
-          console.log("adding ip " + asset.data.ipAddress + " to FirewallRules.json");
-          firewallRules.ListOfBannedIpAddr.push(asset.data.ipAddress);
-          fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
-            if (err) return console.log(err);
-            console.log(JSON.stringify(firewallRules));
-            console.log("writing to " + fileName);
-          });
-        }
+      if (asset.data.type == "firewall" && asset.data.status != "BURNED") {
+        let firewallConfiguration = [];
+        asset.data.data.map((asset) => {
+          firewallConfiguration.push(asset.ipAddress);
+        });
+        console.log("updating firewall rules to FirewallRules.json");
+        firewallRules.ListOfBannedIpAddr = firewallConfiguration;
+        fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
+          if (err) return console.log(err);
+          console.log(JSON.stringify(firewallRules));
+          console.log("writing to " + fileName);
+        });
+        status = true;
       }
     });
+    if (status == false) {
+      let firewallConfiguration = [];
+      console.log("updating firewall rules to FirewallRules.json");
+      firewallRules.ListOfBannedIpAddr = firewallConfiguration;
+      fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
+        if (err) return console.log(err);
+        console.log(JSON.stringify(firewallRules));
+        console.log("writing to " + fileName);
+      });
+    }
   });
 });
 

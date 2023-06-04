@@ -1,42 +1,11 @@
 {
   "assets": [
     {
-      "name": "user",
+      "name": "intelligentProxy",
       "schema": {
-        "username": "string",
-        "email": "string",
-        "password": "string",
-        "publicKey": "string",
-        "privateKey": "string"
+        "type": "string",
+        "data": "object"
       }
-    },
-    {
-      "name": "firewall",
-      "schema": {
-        "ip": "string",
-        "source": "string",
-        "timestamp": "string"
-      }
-    },
-    {
-      "name": "log",
-      "schema": {
-        "nodeName": "string",
-        "message": "string",
-        "timestamp": "string"
-      }
-    },
-    {
-      "name": "myModel",
-      "schema": "https://schema.org/v1/myModel"
-    },
-    {
-      "name": "myModel2",
-      "schema": "https://schema.org/v1/myModel"
-    },
-    {
-      "name": "myModel3",
-      "schema": "https://schema.org/v1/myModel"
     }
   ]
 }

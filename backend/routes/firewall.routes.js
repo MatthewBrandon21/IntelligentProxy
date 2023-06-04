@@ -8,19 +8,15 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/firewall/all", controller.allAccess);
-
-  app.get("/api/firewall/data", [authJwt.verifyToken], controller.getAllData);
+  // app.get("/api/firewall/data", [authJwt.verifyToken], controller.getAllData);
 
   app.post("/api/firewall", [verifyFirewall.checkDuplicateIpAddress], controller.create);
 
   app.post("/api/firewall/internal", [verifyFirewall.checkDuplicateIpAddress], controller.create);
 
+  app.post("/api/firewall/delete/:ipAddress", [verifyFirewall.checkExistingIpAddress], controller.deleteIpAddress);
+
   app.get("/api/firewall", controller.findAll);
 
-  app.get("/api/firewall/:ipAddress", controller.findOne);
-
-  app.put("/api/firewall/:ipAddress", controller.update);
-
-  app.delete("/api/firewall/:ipAddress", controller.delete);
+  app.delete("/api/firewall", controller.delete);
 };

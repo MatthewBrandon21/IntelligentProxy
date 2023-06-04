@@ -1,18 +1,10 @@
 const CRABService = require("../services/CRABService");
 
-const crabService = new CRABService("myModel3");
-
-exports.allAccess = (req, res) => {
-  res.status(200).send("Public Content.");
-};
-
-exports.getAllData = (req, res) => {
-  res.status(200).send("Data log retrieved.");
-};
+const crabService = new CRABService("intelligentProxy");
 
 exports.create = function (req, res) {
   if (!req.body.keypair) {
-    res.status(400).send({ message: "keypair is required" });
+    return res.status(400).send({ message: "keypair is required" });
   }
   if (!req.body.message) {
     res.status(400).send({ message: "message is required" });
@@ -21,25 +13,69 @@ exports.create = function (req, res) {
     res.status(400).send({ message: "nodeName is required" });
   }
 
-  var date = new Date();
-
-  const metadata = {
-    nodeName: req.body.nodeName,
-    message: req.body.message,
-    timestamp: date.toGMTString(),
-  };
-
   const userKeypair = req.body.keypair;
-  // Verify payload received and then process it further
-  crabService.createAsset(userKeypair, metadata).then((value) => {
-    res.json(value);
+  const topublickey = req.body.keypair.publicKey;
+  let assetId = null;
+
+  crabService.retrieveAllAssets().then((value) => {
+    let status = false;
+    var date = new Date();
+
+    value.map((asset) => {
+      if (asset.data.type === "log" && asset.data.status != "BURNED") {
+        // Use existing blockchain
+        assetId = asset.id;
+        let newData = {
+          nodeName: req.body.nodeName,
+          message: req.body.message,
+          timestamp: date.toGMTString(),
+        };
+
+        asset.data.data.push(newData);
+        let dataLog = asset.data.data;
+
+        const metadata = {
+          type: "log",
+          data: dataLog,
+        };
+
+        crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
+          return res.json(value);
+        });
+        status = true;
+      }
+    });
+
+    if (status == false) {
+      // Create new blockchain
+      const metadata = {
+        type: "log",
+        data: [
+          {
+            nodeName: req.body.nodeName,
+            message: req.body.message,
+            timestamp: date.toGMTString(),
+          },
+        ],
+      };
+      crabService.createAsset(userKeypair, metadata).then((value) => {
+        return res.json(value);
+      });
+    }
   });
 };
 
 exports.findAll = function (req, res) {
-  // Verify payload received and then process it further
   crabService.retrieveAllAssets().then((value) => {
-    // res.json(value);
-    res.json(value.map((asset) => asset.data));
+    let status = false;
+    value.map((asset) => {
+      if (asset.data.type == "log" && asset.data.status != "BURNED") {
+        status = true;
+        return res.json(asset);
+      }
+    });
+    if (status == false) {
+      return res.status(404).send({ message: "Log data not Found" });
+    }
   });
 };

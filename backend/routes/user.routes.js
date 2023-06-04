@@ -8,17 +8,13 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/user/all", controller.allAccess);
-
-  app.get("/api/user/data", [authJwt.verifyToken], controller.getAllData);
+  // app.get("/api/user/data", [authJwt.verifyToken], controller.getAllData);
 
   app.post("/api/user", [verifySignUp.checkDuplicateUsernameOrEmail], controller.create);
 
+  app.post("/api/user/delete/:username", [verifySignUp.checkExistingUsername], controller.deleteUsername);
+
   app.get("/api/user", controller.findAll);
 
-  app.get("/api/user/:username", controller.findOne);
-
-  app.put("/api/user/:username", controller.update);
-
-  app.delete("/api/user/:username", controller.delete);
+  app.delete("/api/user", controller.delete);
 };
