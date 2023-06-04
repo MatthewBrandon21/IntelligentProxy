@@ -20,10 +20,10 @@ exports.signInUser = function (req, res) {
   // Verify payload received and then process it further
 
   if (!req.body.email) {
-    res.status(400).send({ message: "email is required" });
+    return res.status(400).send({ message: "email is required" });
   }
   if (!req.body.password) {
-    res.status(400).send({ message: "password is required" });
+    return res.status(400).send({ message: "password is required" });
   }
 
   crabService.retrieveAllAssets().then((value) => {
@@ -46,7 +46,7 @@ exports.signInUser = function (req, res) {
               expiresIn: 86400, // 24 hours
             });
 
-            res.status(200).send({
+            return res.status(200).send({
               accessToken: token,
               username: asset.username,
               email: asset.email,
@@ -61,20 +61,20 @@ exports.signInUser = function (req, res) {
     });
 
     if (status == false) {
-      res.status(404).send({ message: "email Not Found" });
+      return res.status(404).send({ message: "email Not Found" });
     }
   });
 };
 
 exports.createUser = function (req, res) {
   if (!req.body.username) {
-    res.status(400).send({ message: "username is required" });
+    return res.status(400).send({ message: "username is required" });
   }
   if (!req.body.email) {
-    res.status(400).send({ message: "email is required" });
+    return res.status(400).send({ message: "email is required" });
   }
   if (!req.body.password) {
-    res.status(400).send({ message: "password is required" });
+    return res.status(400).send({ message: "password is required" });
   }
 
   let assetId = null;

@@ -19,6 +19,8 @@ exports.create = function (req, res) {
     return res.status(400).send({ message: "source is required" });
   }
 
+  console.log(req.body.keypair);
+
   const userKeypair = req.body.keypair;
   const topublickey = req.body.keypair.publicKey;
   let assetId = null;
@@ -76,6 +78,7 @@ exports.create = function (req, res) {
           },
         ],
       };
+      console.log(userKeypair);
       crabService.createAsset(userKeypair, metadata).then((value) => {
         dem.publish("firewall-channel", "A new firewall data has been created, id : " + value.id);
         let firewallConfiguration = [];

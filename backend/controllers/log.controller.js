@@ -7,10 +7,10 @@ exports.create = function (req, res) {
     return res.status(400).send({ message: "keypair is required" });
   }
   if (!req.body.message) {
-    res.status(400).send({ message: "message is required" });
+    return res.status(400).send({ message: "message is required" });
   }
   if (!req.body.nodeName) {
-    res.status(400).send({ message: "nodeName is required" });
+    return res.status(400).send({ message: "nodeName is required" });
   }
 
   const userKeypair = req.body.keypair;

@@ -17,20 +17,19 @@ var bcrypt = require("bcryptjs");
 
 exports.create = function (req, res) {
   if (!req.body.username) {
-    res.status(400).send({ message: "username is required" });
+    return res.status(400).send({ message: "username is required" });
   }
   if (!req.body.email) {
-    res.status(400).send({ message: "email is required" });
+    return res.status(400).send({ message: "email is required" });
   }
   if (!req.body.password) {
-    res.status(400).send({ message: "password is required" });
+    return res.status(400).send({ message: "password is required" });
   }
 
   let assetId = null;
 
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
-    var date = new Date();
 
     value.map((asset) => {
       if (asset.data.type === "user" && asset.data.status != "BURNED") {
