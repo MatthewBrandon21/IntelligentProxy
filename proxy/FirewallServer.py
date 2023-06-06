@@ -16,6 +16,9 @@ import joblib
 # from keras.models import load_model
 from collections import Counter
 
+# import pandas as pd
+# from sklearn.cluster import KMeans
+
 # from sklearn import svm
 # from sklearn.preprocessing import StandardScaler
 
@@ -232,8 +235,8 @@ def firewall(pkt):
             tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
             # tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
             # tcp_timeseries_data.append(tcp_timeseries)
-            # if(len(tcp_timeseries_data) <= 25):
-                # tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len())]
+            # if(len(tcp_timeseries_data) <= 200):
+                # tcp_timeseries = [str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len())]
                 # tcp_timeseries_data.append(tcp_timeseries)
             if(tcp_ddos):
                 if(tcp_comparator(pkt, t)):
@@ -256,8 +259,8 @@ def firewall(pkt):
             udp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.len)},{str(t.chksum)},{str(pkt.get_payload_len())}')
             # udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
             # udp_timeseries_data.append(udp_timeseries)
-            # if(len(udp_timeseries_data) <= 25):
-                # udp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len())]
+            # if(len(udp_timeseries_data) <= 200):
+                # udp_timeseries = [str(t.sport), str(t.dport), str(t.len), str(t.chksum), str(pkt.get_payload_len())]
                 # udp_timeseries_data.append(udp_timeseries)
             if(udp_ddos):
                 if(udp_comparator(pkt, t)):
@@ -280,8 +283,8 @@ def firewall(pkt):
             icmp_networklogger.info(f'{sca.src},{str(t.chksum)},{str(t.id)},{str(t.seq)},{str(pkt.get_payload_len())}')
             # icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len()), str(0)]
             # icmp_timeseries_data.append(icmp_timeseries)
-            # if(len(icmp_timeseries_data) <= 25):
-                # icmp_timeseries = [str(time.perf_counter()), str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len())]
+            # if(len(icmp_timeseries_data) <= 200):
+                # icmp_timeseries = [str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len())]
                 # icmp_timeseries_data.append(icmp_timeseries)
             if(icmp_ddos):
                 if(icmp_comparator(pkt, t)):
@@ -704,21 +707,21 @@ class TimeseriesDataExporter(Thread):
         global icmp_lstm_scalar
 
         while True:
-            if(len(tcp_timeseries_data) >= 26):
+            if(len(tcp_timeseries_data) >= 201):
                 # with open('dataset_tcp_timeseries.csv', 'a') as f_object:
                 #     writer_object = writer(f_object)
                 #     for data in tcp_timeseries_data:
                 #         writer_object.writerow(data)
                 #     f_object.close()
 
-                tcp_timeseries_data_temp = tcp_timeseries_data
+                tcp_timeseries_data_temp = tcp_timeseries_data[:201]
                 for i in range(len(tcp_timeseries_data_temp)):
-                    tcp_timeseries_data_temp[i][7] = self.StringToBytes(str(tcp_timeseries_data_temp[i][7]))
+                    tcp_timeseries_data_temp[i][6] = self.StringToBytes(str(tcp_timeseries_data_temp[i][6]))
                 tcp_timeseries_data_temp = tcp_lstm_scalar.transform(tcp_timeseries_data_temp)
 
                 features = len(tcp_timeseries_data_temp[0])
                 samples = tcp_timeseries_data_temp.shape[0]
-                train_len = 25
+                train_len = 200
                 input_len = samples - train_len
                 I = np.zeros((samples - train_len, train_len, features))
 
@@ -727,12 +730,23 @@ class TimeseriesDataExporter(Thread):
                     for j in range(i, i + train_len - 1):
                         temp[j-i] = tcp_timeseries_data_temp[j]
                     I[i] = temp
-                tcp_predict = tcp_lstm_model.predict(I[:25], verbose=1)
-                print(tcp_predict)
+                tcp_predict = tcp_lstm_model.predict(I[:200], verbose=1)
+                result = tcp_predict[0][0].round()
+                print(result)
+
+                if(result == 1.0):
+                    tcp_kmeans = tcp_timeseries_data[:201]
+                    for i in range(len(tcp_kmeans)):
+                        tcp_kmeans[i][6] = self.StringToBytes(str(tcp_kmeans[i][6]))
+
+                    X = np.array(tcp_kmeans)
+                    kmeans = KMeans(n_clusters=10, random_state=20, init = 'k-means++').fit(X)
+                    idx = pd.Index(kmeans.labels_)
+                    print(idx.value_counts())
                 
                 tcp_timeseries_data_temp = []
                 tcp_timeseries_data = []
-            if(len(udp_timeseries_data) >= 26):
+            if(len(udp_timeseries_data) >= 201):
                 # with open('dataset_udp_timeseries.csv', 'a') as f_object:
                 #     writer_object = writer(f_object)
                 #     for data in udp_timeseries_data:
@@ -744,7 +758,7 @@ class TimeseriesDataExporter(Thread):
 
                 features = len(udp_timeseries_data_temp[0])
                 samples = udp_timeseries_data_temp.shape[0]
-                train_len = 25
+                train_len = 200
                 input_len = samples - train_len
                 I = np.zeros((samples - train_len, train_len, features))
 
@@ -753,12 +767,13 @@ class TimeseriesDataExporter(Thread):
                     for j in range(i, i + train_len - 1):
                         temp[j-i] = udp_timeseries_data_temp[j]
                     I[i] = temp
-                udp_predict = udp_lstm_model.predict(I[:25], verbose=1)
-                print(udp_predict)
+                udp_predict = udp_lstm_model.predict(I[:200], verbose=1)
+                result = udp_predict[0][0].round()
+                print(result)
                 
                 udp_timeseries_data_temp = []
                 udp_timeseries_data = []
-            if(len(icmp_timeseries_data) >= 26):
+            if(len(icmp_timeseries_data) >= 201):
                 # with open('dataset_icmp_timeseries.csv', 'a') as f_object:
                 #     writer_object = writer(f_object)
                 #     for data in icmp_timeseries_data:
@@ -770,7 +785,7 @@ class TimeseriesDataExporter(Thread):
 
                 features = len(icmp_timeseries_data_temp[0])
                 samples = icmp_timeseries_data_temp.shape[0]
-                train_len = 25
+                train_len = 200
                 input_len = samples - train_len
                 I = np.zeros((samples - train_len, train_len, features))
 
@@ -779,8 +794,9 @@ class TimeseriesDataExporter(Thread):
                     for j in range(i, i + train_len - 1):
                         temp[j-i] = icmp_timeseries_data_temp[j]
                     I[i] = temp
-                icmp_predict = icmp_lstm_model.predict(I[:25], verbose=1)
-                print(icmp_predict)
+                icmp_predict = icmp_lstm_model.predict(I[:200], verbose=1)
+                result = icmp_predict[0][0].round()
+                print(result)
                 
                 icmp_timeseries_data_temp = []
                 icmp_timeseries_data = []
