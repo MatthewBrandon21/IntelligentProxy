@@ -19,14 +19,15 @@ for line in meal:
     else:
         data_list.pop(0)
         data_list.pop(0)
-        data_list.pop(1)
+        data_list.pop(0)
         data_list[4] = StringToBytes(data_list[4])
         data_list[(len(data_list)-1)]=data_list[(len(data_list)-1)].replace('\n', '')
         features.append(data_list[:(len(data_list)-1)])
         labels.append(data_list[(len(data_list)-1)])
 meal.close()
 
-print(features)
+# features.append(["123132","1238","1230","913216","501232","0123","52123"])
+# print(features)
 
 #this is your array with the values
 X = np.array(features)
@@ -47,7 +48,8 @@ print(idx.value_counts())
 # the values (0,1) tell you to what cluster does every of your data points correspond to
 
 #You can predict new points with
-print(kmeans.predict([features[40]]))
+# print(kmeans.predict([["123132","1238","1230","913216","501232","0123","52123"]]))
+print(kmeans.predict([["2119444928","0","10","0","96","64240","34151","0","60"]]))
 
 #array([0, 1], dtype=int32)
 
