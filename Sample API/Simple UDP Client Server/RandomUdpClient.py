@@ -30,7 +30,8 @@ def main():
                 UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
                 while time.time() < t_end:
                     try:
-                        msgFromClient       = ''.join(random.choice(letters) for i in range(random.randint(0, 50)))
+                        # msgFromClient       = ''.join(random.choice(letters) for i in range(random.randint(0, 50)))
+                        msgFromClient       = 'HI UDP SERVER'
                         bytesToSend         = str.encode(msgFromClient)
                         start_time = time.perf_counter()
                         # Send to server using created UDP socket
