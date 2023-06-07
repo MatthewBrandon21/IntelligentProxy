@@ -1,10 +1,10 @@
 const CRABService = require("../services/CRABService");
-
 const crabService = new CRABService("intelligentProxy");
 
 checkDuplicateUsernameOrEmail = (req, res, next) => {
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type === "user" && asset.data.status != "BURNED") {
         if (asset.data.data.find((e) => e.username === req.body.username)) {
@@ -17,6 +17,7 @@ checkDuplicateUsernameOrEmail = (req, res, next) => {
         }
       }
     });
+
     if (status == false) {
       next();
     }
@@ -26,6 +27,7 @@ checkDuplicateUsernameOrEmail = (req, res, next) => {
 checkExistingUsername = (req, res, next) => {
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type === "user" && asset.data.status != "BURNED") {
         if (!asset.data.data.find((e) => e.username === req.params.username)) {
@@ -34,6 +36,7 @@ checkExistingUsername = (req, res, next) => {
         }
       }
     });
+
     if (status == false) {
       next();
     }

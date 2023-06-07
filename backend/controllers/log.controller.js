@@ -1,5 +1,4 @@
 const CRABService = require("../services/CRABService");
-
 const crabService = new CRABService("intelligentProxy");
 
 exports.create = function (req, res) {
@@ -15,16 +14,19 @@ exports.create = function (req, res) {
 
   const userKeypair = req.body.keypair;
   const topublickey = req.body.keypair.publicKey;
+
   let assetId = null;
 
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     var date = new Date();
 
     value.map((asset) => {
       if (asset.data.type === "log" && asset.data.status != "BURNED") {
         // Use existing blockchain
         assetId = asset.id;
+
         let newData = {
           nodeName: req.body.nodeName,
           message: req.body.message,
@@ -58,6 +60,7 @@ exports.create = function (req, res) {
           },
         ],
       };
+
       crabService.createAsset(userKeypair, metadata).then((value) => {
         return res.json(value);
       });
@@ -68,6 +71,7 @@ exports.create = function (req, res) {
 exports.findAll = function (req, res) {
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type == "log" && asset.data.status != "BURNED") {
         status = true;

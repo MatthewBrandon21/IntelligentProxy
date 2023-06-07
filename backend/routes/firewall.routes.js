@@ -10,6 +10,16 @@ module.exports = function (app) {
 
   // app.get("/api/firewall/data", [authJwt.verifyToken], controller.getAllData);
 
+  // app.post("/api/firewall", [authJwt.verifyToken], [verifyFirewall.checkDuplicateIpAddress], controller.create);
+
+  // app.post("/api/firewall/internal", [verifyFirewall.checkDuplicateIpAddress], controller.create);
+
+  // app.post("/api/firewall/delete/:ipAddress", [authJwt.verifyToken], [verifyFirewall.checkExistingIpAddress], controller.deleteIpAddress);
+
+  // app.get("/api/firewall", [authJwt.verifyToken], controller.findAll);
+
+  // app.delete("/api/firewall", [authJwt.verifyToken], controller.delete);
+
   app.post("/api/firewall", [verifyFirewall.checkDuplicateIpAddress], controller.create);
 
   app.post("/api/firewall/internal", [verifyFirewall.checkDuplicateIpAddress], controller.create);

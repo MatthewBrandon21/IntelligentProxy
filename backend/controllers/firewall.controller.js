@@ -1,12 +1,15 @@
+// BigchainDB ORM
 const CRABService = require("../services/CRABService");
-
-const dem = require("../services/DemocracyService");
-
 const crabService = new CRABService("intelligentProxy");
 
+// Democracy JS
+const dem = require("../services/DemocracyService");
+
+// Firewall rules configuration
 const fs = require("fs");
+// Change to real firewall rules file
 const fileName = "FirewallRulesClone.json";
-let firewallRules = require("../FirewallRulesClone.json");
+let firewallRules = require("../../proxy/FirewallRulesClone.json");
 
 exports.create = function (req, res) {
   if (!req.body.keypair) {
@@ -19,8 +22,6 @@ exports.create = function (req, res) {
     return res.status(400).send({ message: "source is required" });
   }
 
-  console.log(req.body.keypair);
-
   const userKeypair = req.body.keypair;
   const topublickey = req.body.keypair.publicKey;
   let assetId = null;
@@ -31,8 +32,11 @@ exports.create = function (req, res) {
 
     value.map((asset) => {
       if (asset.data.type === "firewall" && asset.data.status != "BURNED") {
+        status = true;
+
         // Use existing blockchain
         assetId = asset.id;
+
         let newData = {
           ipAddress: req.body.ipAddress,
           source: req.body.source,
@@ -48,7 +52,10 @@ exports.create = function (req, res) {
         };
 
         crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
+          // Publish to consensus channel
           dem.publish("firewall-channel", "A new firewall data has been created, id : " + value.id);
+
+          // Update the firewall rules file
           let firewallConfiguration = [];
           value.data.data.map((asset) => {
             firewallConfiguration.push(asset.ipAddress);
@@ -57,17 +64,19 @@ exports.create = function (req, res) {
           firewallRules.ListOfBannedIpAddr = firewallConfiguration;
           fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
             if (err) return console.log(err);
-            console.log(JSON.stringify(firewallRules));
-            console.log("writing to " + fileName);
+            // console.log(JSON.stringify(firewallRules));
+            // console.log("writing to " + fileName);
           });
+
           return res.json(value);
         });
-        status = true;
       }
     });
 
     if (status == false) {
       // Create new blockchain
+
+      // Create new firewall data
       const metadata = {
         type: "firewall",
         data: [
@@ -78,9 +87,11 @@ exports.create = function (req, res) {
           },
         ],
       };
-      console.log(userKeypair);
+
       crabService.createAsset(userKeypair, metadata).then((value) => {
+        // Publish to consensus channel
         dem.publish("firewall-channel", "A new firewall data has been created, id : " + value.id);
+
         let firewallConfiguration = [];
         value.data.data.map((asset) => {
           firewallConfiguration.push(asset.ipAddress);
@@ -89,9 +100,10 @@ exports.create = function (req, res) {
         firewallRules.ListOfBannedIpAddr = firewallConfiguration;
         fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
           if (err) return console.log(err);
-          console.log(JSON.stringify(firewallRules));
-          console.log("writing to " + fileName);
+          // console.log(JSON.stringify(firewallRules));
+          // console.log("writing to " + fileName);
         });
+
         return res.json(value);
       });
     }
@@ -106,6 +118,7 @@ exports.deleteIpAddress = function (req, res) {
   const userKeypair = req.body.keypair;
   const topublickey = req.body.keypair.publicKey;
   const ipAddress = req.params.ipAddress;
+
   let assetId = null;
 
   crabService.retrieveAllAssets().then((value) => {
@@ -113,6 +126,8 @@ exports.deleteIpAddress = function (req, res) {
 
     value.map((asset) => {
       if (asset.data.type === "firewall" && asset.data.status != "BURNED") {
+        status = true;
+
         assetId = asset.id;
 
         var filteredArray = asset.data.data.filter(function (e) {
@@ -126,6 +141,7 @@ exports.deleteIpAddress = function (req, res) {
 
         crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
           dem.publish("firewall-channel", "A firewall data has been modified, id : " + value.id);
+
           let firewallConfiguration = [];
           value.data.data.map((asset) => {
             firewallConfiguration.push(asset.ipAddress);
@@ -134,12 +150,12 @@ exports.deleteIpAddress = function (req, res) {
           firewallRules.ListOfBannedIpAddr = firewallConfiguration;
           fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
             if (err) return console.log(err);
-            console.log(JSON.stringify(firewallRules));
-            console.log("writing to " + fileName);
+            // console.log(JSON.stringify(firewallRules));
+            // console.log("writing to " + fileName);
           });
+
           return res.json(value);
         });
-        status = true;
       }
     });
 
@@ -152,8 +168,11 @@ exports.deleteIpAddress = function (req, res) {
 exports.findAll = function (req, res) {
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type == "firewall" && asset.data.status != "BURNED") {
+        status = true;
+
         let firewallConfiguration = [];
         asset.data.data.map((asset) => {
           firewallConfiguration.push(asset.ipAddress);
@@ -162,22 +181,25 @@ exports.findAll = function (req, res) {
         firewallRules.ListOfBannedIpAddr = firewallConfiguration;
         fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
           if (err) return console.log(err);
-          console.log(JSON.stringify(firewallRules));
-          console.log("writing to " + fileName);
+          // console.log(JSON.stringify(firewallRules));
+          // console.log("writing to " + fileName);
         });
-        status = true;
+
         return res.json(asset);
       }
     });
     if (status == false) {
+      // If firewall blockchain deleted
+
       let firewallConfiguration = [];
       console.log("updating firewall rules to FirewallRules.json");
       firewallRules.ListOfBannedIpAddr = firewallConfiguration;
       fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
         if (err) return console.log(err);
-        console.log(JSON.stringify(firewallRules));
-        console.log("writing to " + fileName);
+        // console.log(JSON.stringify(firewallRules));
+        // console.log("writing to " + fileName);
       });
+
       return res.status(404).send({ message: "Firewall configuration not Found" });
     }
   });
@@ -196,19 +218,22 @@ exports.delete = function (req, res) {
 
     value.map((asset) => {
       if (asset.data.type === "firewall" && asset.data.status != "BURNED") {
+        status = true;
+
         assetId = asset.id;
+
         crabService.burnAsset(assetId, userKeypair).then((value) => {
           let firewallConfiguration = [];
           console.log("updating firewall rules to FirewallRules.json");
           firewallRules.ListOfBannedIpAddr = firewallConfiguration;
           fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
             if (err) return console.log(err);
-            console.log(JSON.stringify(firewallRules));
-            console.log("writing to " + fileName);
+            // console.log(JSON.stringify(firewallRules));
+            // console.log("writing to " + fileName);
           });
+
           return res.status(200).send({ message: "Success burn firewall configuration with id " + value.id });
         });
-        status = true;
       }
     });
 

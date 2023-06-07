@@ -7,10 +7,7 @@ const bdbOrm = new Orm(URL, {
   app_key: bdbConfig.auth.app_key,
 });
 
-const config = require("../config/auth.config");
-
 const CRABService = require("../services/CRABService");
-
 const crabService = new CRABService("intelligentProxy");
 
 var bcrypt = require("bcryptjs");
@@ -45,7 +42,9 @@ exports.create = function (req, res) {
 
         assetId = asset.id;
 
-        const newUserKeypair = new bdbOrm.driver.Ed25519Keypair();
+        // const newUserKeypair = new bdbOrm.driver.Ed25519Keypair();
+
+        const newUserKeypair = userKeypair;
 
         let newData = {
           username: req.body.username,
@@ -107,6 +106,7 @@ exports.deleteUsername = function (req, res) {
   const userKeypair = req.body.keypair;
   const topublickey = req.body.keypair.publicKey;
   const username = req.params.username;
+
   let assetId = null;
 
   crabService.retrieveAllAssets().then((value) => {
@@ -114,6 +114,8 @@ exports.deleteUsername = function (req, res) {
 
     value.map((asset) => {
       if (asset.data.type === "user" && asset.data.status != "BURNED") {
+        status = true;
+
         assetId = asset.id;
 
         var filteredArray = asset.data.data.filter(function (e) {
@@ -128,7 +130,6 @@ exports.deleteUsername = function (req, res) {
         crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
           return res.json(value);
         });
-        status = true;
       }
     });
 
@@ -141,6 +142,7 @@ exports.deleteUsername = function (req, res) {
 exports.findAll = function (req, res) {
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type == "user" && asset.data.status != "BURNED") {
         status = true;
@@ -159,6 +161,7 @@ exports.delete = function (req, res) {
   }
 
   const userKeypair = req.body.keypair;
+
   let assetId = null;
 
   crabService.retrieveAllAssets().then((value) => {
@@ -166,11 +169,13 @@ exports.delete = function (req, res) {
 
     value.map((asset) => {
       if (asset.data.type === "user" && asset.data.status != "BURNED") {
+        status = true;
+
         assetId = asset.id;
+
         crabService.burnAsset(assetId, userKeypair).then((value) => {
           return res.status(200).send({ message: "Success burn user data with id " + value.id });
         });
-        status = true;
       }
     });
 

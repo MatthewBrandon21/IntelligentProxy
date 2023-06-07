@@ -9,6 +9,10 @@ module.exports = function (app) {
 
   // app.get("/api/log/data", [authJwt.verifyToken], controller.getAllData);
 
+  // app.post("/api/log", [authJwt.verifyToken], controller.create);
+
+  // app.get("/api/log", [authJwt.verifyToken], controller.findAll);
+
   app.post("/api/log", controller.create);
 
   app.get("/api/log", controller.findAll);

@@ -1,11 +1,12 @@
 const CRABService = require("../services/CRABService");
+const crabService = new CRABService("intelligentProxy");
+
 var Democracy = require("democracy");
 
-const crabService = new CRABService("myModel");
-
 const fs = require("fs");
+// change the firewall rule name
 const fileName = "FirewallRulesClone.json";
-let firewallRules = require("../FirewallRulesClone.json");
+let firewallRules = require("../../proxy/FirewallRulesClone.json");
 
 var dem = new Democracy({
   source: "0.0.0.0:5000",
@@ -28,50 +29,52 @@ dem.on("leader", function (data) {
   console.log("New Leader: ", data);
 });
 
-// Support for custom events.
-dem.on("ciao", (data) => {
-  console.log(data.hello); // Logs 'world'
+dem.on("test_democracy", (data) => {
+  console.log(data.hello);
 });
 
-dem.send("ciao", { hello: "world" });
+dem.send("test_democracy", { hello: "Hello node!" });
 
-// Support for basic pub/sub.
-dem.on("my-channel", (data) => {
-  console.log(data.hello); // Logs 'world'
+dem.on("default-channel", (data) => {
+  console.log(data.hello);
 });
 
-dem.subscribe("my-channel");
-dem.publish("my-channel", { hello: "world" });
+dem.subscribe("default-channel");
+dem.publish("default-channel", { hello: "default message" });
 
-// Support for basic pub/sub.
 dem.on("firewall-channel", (msg) => {
   console.log("New firewall rules from other nodes, firewall id : " + msg);
+
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type == "firewall" && asset.data.status != "BURNED") {
         let firewallConfiguration = [];
         asset.data.data.map((asset) => {
           firewallConfiguration.push(asset.ipAddress);
         });
+
         console.log("updating firewall rules to FirewallRules.json");
         firewallRules.ListOfBannedIpAddr = firewallConfiguration;
         fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
           if (err) return console.log(err);
-          console.log(JSON.stringify(firewallRules));
-          console.log("writing to " + fileName);
+          // console.log(JSON.stringify(firewallRules));
+          // console.log("writing to " + fileName);
         });
         status = true;
       }
     });
+
     if (status == false) {
       let firewallConfiguration = [];
+
       console.log("updating firewall rules to FirewallRules.json");
       firewallRules.ListOfBannedIpAddr = firewallConfiguration;
       fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
         if (err) return console.log(err);
-        console.log(JSON.stringify(firewallRules));
-        console.log("writing to " + fileName);
+        // console.log(JSON.stringify(firewallRules));
+        // console.log("writing to " + fileName);
       });
     }
   });

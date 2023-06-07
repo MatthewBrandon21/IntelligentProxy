@@ -1,10 +1,10 @@
 const CRABService = require("../services/CRABService");
-
 const crabService = new CRABService("intelligentProxy");
 
 checkDuplicateIpAddress = (req, res, next) => {
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type === "firewall" && asset.data.status != "BURNED") {
         if (asset.data.data.find((e) => e.ipAddress === req.body.ipAddress)) {
@@ -13,6 +13,7 @@ checkDuplicateIpAddress = (req, res, next) => {
         }
       }
     });
+
     if (status == false) {
       next();
     }
@@ -22,6 +23,7 @@ checkDuplicateIpAddress = (req, res, next) => {
 checkExistingIpAddress = (req, res, next) => {
   crabService.retrieveAllAssets().then((value) => {
     let status = false;
+
     value.map((asset) => {
       if (asset.data.type === "firewall" && asset.data.status != "BURNED") {
         if (!asset.data.data.find((e) => e.ipAddress === req.params.ipAddress)) {
@@ -30,6 +32,7 @@ checkExistingIpAddress = (req, res, next) => {
         }
       }
     });
+
     if (status == false) {
       next();
     }

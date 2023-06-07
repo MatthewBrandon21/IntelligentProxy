@@ -1,18 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 var bodyParser = require("body-parser");
+
 const ORMService = require("./services/ORMService");
 
 const dem = require("./services/DemocracyService");
 
-// const cron = require("./services/CronService");
+const cron = require("./services/CronService");
 
 const app = express();
 const ormService = new ORMService();
-
-var corsOptions = {
-  origin: "http://localhost:3000",
-};
 
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
@@ -31,7 +28,7 @@ app.use(bodyParser.json());
 
 // simple route
 app.get("/", (req, res) => {
-  dem.publish("my-channel", { hello: "world" });
+  dem.publish("default-channel", { hello: "test democracy" });
   res.json({ message: "Backend Intelligent Proxy Server" });
 });
 
