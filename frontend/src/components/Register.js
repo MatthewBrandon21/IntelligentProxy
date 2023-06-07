@@ -33,7 +33,7 @@ const Register = () => {
             <div className="column is-4-desktop">
               <form onSubmit={Register} className="box">
                 <h1 className="has-text-centered is-size-5">
-                  <strong>Diseases Prediction Admin Panel</strong>
+                  <strong>Intelligent Proxy Admin Panel</strong>
                 </h1>
                 <p className="has-text-centered">{msg}</p>
                 <div className="field mt-5">
