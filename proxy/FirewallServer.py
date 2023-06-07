@@ -16,6 +16,11 @@ import joblib
 # from keras.models import load_model
 from collections import Counter
 
+from sklearn import svm
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.preprocessing import StandardScaler
+
 # import pandas as pd
 # from sklearn.cluster import KMeans
 
@@ -23,6 +28,10 @@ from collections import Counter
 # from sklearn.preprocessing import StandardScaler
 
 firewall_name = "node-firewall"
+
+tcp_normal_data = []
+tcp_svm_instance = svm.SVC(kernel = 'linear', random_state=0)
+tcp_sc = StandardScaler()
 
 tcp_svm_model = joblib.load('./model/model_svm_tcp.sav')
 tcp_svm_scaller = joblib.load('./scaler/scaler_svm_tcp.save')
@@ -173,6 +182,8 @@ def firewall(pkt):
     global tcp_ddos
     global udp_ddos
     global icmp_ddos
+    global tcp_svm_instance
+    global tcp_sc
 
     # parse packet data from incomming connection
     sca = IP(pkt.get_payload())
@@ -235,14 +246,21 @@ def firewall(pkt):
             tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.dport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
             # tcp_timeseries = [str(time.perf_counter()), str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
             # tcp_timeseries_data.append(tcp_timeseries)
-            # if(len(tcp_timeseries_data) <= 200):
-                # tcp_timeseries = [str(t.sport), str(t.dport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len())]
-                # tcp_timeseries_data.append(tcp_timeseries)
+            # tcp_timeseries = [str(t.sport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len())]
+            # tcp_timeseries_data.append(tcp_timeseries)
             if(tcp_ddos):
                 if(tcp_comparator(pkt, t)):
                     print(f'TCP packet blocked, ip src : {sca.src}')
                     pkt.drop()
                     return
+                # tcp_timeseries[5] = StringToBytes(tcp_timeseries[5])
+                # data = tcp_sc.transform([tcp_timeseries])
+                # result = tcp_svm_instance.predict([data[0]])[0]
+                # # print(result)
+                # if(result == "1"):
+                #     pkt.drop()
+                #     print("packet dropped")
+                #     return
     
     if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
@@ -294,6 +312,13 @@ def firewall(pkt):
     
     # Forward packet to iptables
     pkt.accept()
+
+def StringToBytes( data):
+    sum = 0
+    arrbytes = bytes(data, 'utf-8')
+    for i in arrbytes:
+        sum = sum + i
+    return(sum)
 
 def find_most(List):
     return(mode(List))
@@ -705,6 +730,10 @@ class TimeseriesDataExporter(Thread):
         global tcp_lstm_scalar
         global udp_lstm_scalar
         global icmp_lstm_scalar
+        global tcp_normal_data
+        global tcp_svm_instance
+        global tcp_sc
+        global tcp_ddos
 
         while True:
             if(len(tcp_timeseries_data) >= 201):
@@ -716,7 +745,7 @@ class TimeseriesDataExporter(Thread):
 
                 tcp_timeseries_data_temp = tcp_timeseries_data[:201]
                 for i in range(len(tcp_timeseries_data_temp)):
-                    tcp_timeseries_data_temp[i][6] = self.StringToBytes(str(tcp_timeseries_data_temp[i][6]))
+                    tcp_timeseries_data_temp[i][5] = self.StringToBytes(str(tcp_timeseries_data_temp[i][5]))
                 tcp_timeseries_data_temp = tcp_lstm_scalar.transform(tcp_timeseries_data_temp)
 
                 features = len(tcp_timeseries_data_temp[0])
@@ -734,15 +763,38 @@ class TimeseriesDataExporter(Thread):
                 result = tcp_predict[0][0].round()
                 print(result)
 
-                if(result == 1.0):
-                    tcp_kmeans = tcp_timeseries_data[:201]
-                    for i in range(len(tcp_kmeans)):
-                        tcp_kmeans[i][6] = self.StringToBytes(str(tcp_kmeans[i][6]))
+                if(result == 1.0 and len(tcp_normal_data) != 0):
+                    tcp_ddos = False
+                    features, labels = [], []
+                    tcp_bad_data = tcp_timeseries_data[:201]
+                    for i in range(len(tcp_bad_data)):
+                        tcp_bad_data[i][5] = self.StringToBytes(str(tcp_bad_data[i][5]))
+                        tcp_bad_data[i].append("1")
+                    tcp_svm_data = tcp_bad_data + tcp_normal_data
+                    for data in tcp_svm_data:
+                        features.append(data[:(len(data)-1)])
+                        labels.append(data[(len(data)-1)]) 
+                    print(f"Size of feature dataset : {len(features)}")
+                    print(f"Size of feature dataset : {len(labels)}")  
 
-                    X = np.array(tcp_kmeans)
-                    kmeans = KMeans(n_clusters=10, random_state=20, init = 'k-means++').fit(X)
-                    idx = pd.Index(kmeans.labels_)
-                    print(idx.value_counts())
+                    features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.20, stratify=labels, random_state = 0)
+                    X_train = tcp_sc.fit_transform(features_train)
+                    X_test = tcp_sc.transform(features_test)
+                    tcp_svm_instance.fit(X_train, labels_train)
+                    labels_pred = tcp_svm_instance.predict(X_test)
+                    cm = confusion_matrix(labels_test,labels_pred)
+                    print(cm)
+                    print(classification_report(labels_test,labels_pred))
+                    tcp_ddos = True
+                    time.sleep(3)
+                elif(result != 1.0):
+                    tcp_normal_data = tcp_timeseries_data[:201]
+                    for i in range(len(tcp_normal_data)):
+                        tcp_normal_data[i][5] = self.StringToBytes(str(tcp_normal_data[i][5]))
+                        tcp_normal_data[i].append("0")
+                    tcp_ddos = False
+                else:
+                    print("DDoS Mitigation skipped because tcp_normal_data is empty")
                 
                 tcp_timeseries_data_temp = []
                 tcp_timeseries_data = []
