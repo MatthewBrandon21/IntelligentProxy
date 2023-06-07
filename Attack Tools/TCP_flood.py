@@ -17,7 +17,7 @@ def main():
     if argv[1] == argv[1]:
         try:
             host = argv[1]
-            port = argv[2]
+            port = int(argv[2])
             time_input = int(argv[3])
             thread_count = int(argv[4])
             t_end = time.time() + time_input
