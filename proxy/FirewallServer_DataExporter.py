@@ -181,7 +181,7 @@ def firewall(pkt):
         if t.dport in ListOfWebserverPorts:
             tcp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.seq)},{str(t.ack)},{str(t.dataofs)},{str(t.reserved)},{str(t.flags)},{str(t.window)},{str(t.chksum)},{str(t.urgptr)},{str(pkt.get_payload_len())}')
             if(len(tcp_timeseries_data) <= tcp_timeseries_len):
-                tcp_timeseries = [str(t.sport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len())]
+                tcp_timeseries = [str(t.sport), str(t.seq), str(t.ack), str(t.dataofs), str(t.reserved), str(t.flags), str(t.window), str(t.chksum), str(t.urgptr), str(pkt.get_payload_len()), str(0)]
                 tcp_timeseries_data.append(tcp_timeseries)
     
     if sca.haslayer(UDP):
@@ -189,7 +189,7 @@ def firewall(pkt):
         if t.dport in ListOfWebserverPorts:
             udp_networklogger.info(f'{sca.src},{str(t.sport)},{str(t.len)},{str(t.chksum)},{str(pkt.get_payload_len())}')
             if(len(udp_timeseries_data) <= udp_timeseries_len):
-                udp_timeseries = [str(t.sport), str(t.len), str(t.chksum), str(pkt.get_payload_len())]
+                udp_timeseries = [str(t.sport), str(t.len), str(t.chksum), str(pkt.get_payload_len()), str(0)]
                 udp_timeseries_data.append(udp_timeseries)
     
     if sca.haslayer(ICMP):
@@ -198,7 +198,7 @@ def firewall(pkt):
         if(t.code==0 and t.type==8):
             icmp_networklogger.info(f'{sca.src},{str(t.chksum)},{str(t.id)},{str(t.seq)},{str(pkt.get_payload_len())}')
             if(len(icmp_timeseries_data) <= icmp_timeseries_len):
-                icmp_timeseries = [str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len())]
+                icmp_timeseries = [str(t.chksum), str(t.id), str(t.seq), str(pkt.get_payload_len()), str(0)]
                 icmp_timeseries_data.append(icmp_timeseries)
     
     # Forward packet to iptables
