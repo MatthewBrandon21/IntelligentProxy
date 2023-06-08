@@ -1,0 +1,3 @@
+1686230817.274168,140343093139136,in-event <InotifyEvent: src_path=b'ProxyConfig.json', wd=1, mask=IN_OPEN, cookie=0, name=''>
+1686230817.274944,140343513645120,creating proxy: proxy1
+1686230817.286806,140343513645120,creating proxy: proxy2
