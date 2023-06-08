@@ -590,11 +590,12 @@ class DataParser(Thread):
         self.sleep_time = 5
         self.file_name = "network.log"
         self.data_count = 10
-        self.http_timeseries = {}
 
     def run(self):
         global http_lstm_model
         global http_lstm_scaler
+
+        http_timeseries = {}
 
         while True:
             # Array for save raw data from file
@@ -628,21 +629,21 @@ class DataParser(Thread):
                                 if(len(ip_data) != 0):
                                     for data in ip_data:
                                         if(len(data) != 0):
-                                            http_timeseries_data = data
+                                            http_timeseries_data = data.copy()
                                             http_timeseries_data.pop(0)
                                             http_timeseries_data.pop(1)
                                             http_timeseries_data.pop(3)
                                             http_timeseries_data[4] = self.StringToBytes(http_timeseries_data[4])
                                             http_timeseries_data[5] = self.StringToBytes(http_timeseries_data[5])
-                                            if ip_data[0][5] in self.http_timeseries:
-                                                self.http_timeseries[ip_data[0][5]].append(http_timeseries_data)
+                                            if data[5] in http_timeseries:
+                                                http_timeseries[data[5]].append(http_timeseries_data)
                                             else:
-                                                self.http_timeseries[ip_data[0][5]] = []
-                                                self.http_timeseries[ip_data[0][5]].append(http_timeseries_data)
-                                    if ip_data[0][5] in self.http_timeseries:
-                                        if(len(self.http_timeseries[ip_data[0][5]]) >= 51):
+                                                http_timeseries[data[5]] = []
+                                                http_timeseries[data[5]].append(http_timeseries_data)
+                                    if ip_data[0][5] in http_timeseries:
+                                        if(len(http_timeseries[ip_data[0][5]]) >= 51):
                                             http_prediction_time_start = time.perf_counter()
-                                            http_timeseries_data_temp = self.http_timeseries[ip_data[0][5]][:51]
+                                            http_timeseries_data_temp = http_timeseries[ip_data[0][5]][:51]
                                             
                                             http_timeseries_data_temp = http_lstm_scaler.transform(http_timeseries_data_temp)
 
@@ -670,7 +671,7 @@ class DataParser(Thread):
                                                     jsonFile.seek(0)  # rewind
                                                     json.dump(data, jsonFile)
                                                     jsonFile.truncate()
-                                            self.http_timeseries[ip_data[0][5]] = []
+                                            http_timeseries[ip_data[0][5]] = []
 
             # Flush logfile
             with open(self.file_name, 'w'):

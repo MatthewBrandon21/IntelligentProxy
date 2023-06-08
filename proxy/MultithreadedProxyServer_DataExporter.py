@@ -17,6 +17,7 @@ import psutil
 import logging
 import numpy as np
 import csv
+from csv import writer
 import pandas as pd
 import itertools
 
@@ -585,11 +586,12 @@ class DataParser(Thread):
         self.sleep_time = 5
         self.file_name = "network.log"
         self.data_count = 10
-        self.http_timeseries = []
 
     def run(self):
         global http_model
         global http_scaller
+
+        http_timeseries = {}
 
         while True:
             # Array for save raw data from file
@@ -648,18 +650,18 @@ class DataParser(Thread):
                                                 url.append(self.StringToBytes(data[8]))
                                             if(data[9] != "NULL"):
                                                 connection_timeout.append(int(data[9]))
-                                            http_timeseries_data = data
+                                            http_timeseries_data = data.copy()
                                             http_timeseries_data.pop(0)
                                             http_timeseries_data.pop(1)
                                             http_timeseries_data.pop(3)
                                             http_timeseries_data[4] = self.StringToBytes(http_timeseries_data[4])
                                             http_timeseries_data[5] = self.StringToBytes(http_timeseries_data[5])
-                                            http_timeseries_data[7] = "0"
-                                            if ip_data[0][5] in self.http_timeseries:
-                                                self.http_timeseries[ip_data[0][5]].append(http_timeseries_data)
+                                            http_timeseries_data.append("0")
+                                            if data[5] in http_timeseries:
+                                                http_timeseries[data[5]].append(http_timeseries_data)
                                             else:
-                                                self.http_timeseries[ip_data[0][5]] = []
-                                                self.http_timeseries[ip_data[0][5]].append(http_timeseries_data)
+                                                http_timeseries[data[5]] = []
+                                                http_timeseries[data[5]].append(http_timeseries_data)
                                                                         
                                     timestamp_std = np.std(timestamp)
                                     no_thread_std = np.std(no_thread)
@@ -683,14 +685,14 @@ class DataParser(Thread):
                                         writer.writerow(row)
                                     datafile.close()
 
-                                    if ip_data[0][5] in self.http_timeseries:
-                                        if(len(self.http_timeseries[ip_data[0][5]]) >= 51):
-                                            with open('dataset_http_timeseries', 'a') as f_object:
-                                                writer_object = writer(f_object)
-                                                for data in self.http_timeseries[ip_data[0][5]]:
+                                    if ip_data[0][5] in http_timeseries:
+                                        if(len(http_timeseries[ip_data[0][5]]) >= 51):
+                                            with open('dataset_http_timeseries.csv', 'a') as f_object:
+                                                writer_object = csv.writer(f_object)
+                                                for data in http_timeseries[ip_data[0][5]]:
                                                     writer_object.writerow(data)
                                                 f_object.close()
-                                            self.http_timeseries[ip_data[0][5]] = []
+                                            http_timeseries[ip_data[0][5]] = []
 
             # Flush logfile
             with open(self.file_name, 'w'):

@@ -26,14 +26,14 @@ udp_log_file_name = "udp_firewall_network.log"
 icmp_log_file_name = "icmp_firewall_network.log"
 
 # dataset individual data
-tcp_dataset_individual_file_name = "tcp_dataset_individual.log"
-udp_dataset_individual_file_name = "udp_dataset_individual.log"
-icmp_dataset_individual_file_name = "icmp_dataset_individual.log"
+tcp_dataset_individual_file_name = "tcp_dataset_individual.csv"
+udp_dataset_individual_file_name = "udp_dataset_individual.csv"
+icmp_dataset_individual_file_name = "icmp_dataset_individual.csv"
 
 # dataset timeseries data
-tcp_dataset_timeseries_file_name = "tcp_dataset_timeseries.log"
-udp_dataset_timeseries_file_name = "udp_dataset_timeseries.log"
-icmp_dataset_timeseries_file_name = "icmp_dataset_timeseries.log"
+tcp_dataset_timeseries_file_name = "tcp_dataset_timeseries.csv"
+udp_dataset_timeseries_file_name = "udp_dataset_timeseries.csv"
+icmp_dataset_timeseries_file_name = "icmp_dataset_timeseries.csv"
 
 # Timeseries data
 tcp_timeseries_data = []
