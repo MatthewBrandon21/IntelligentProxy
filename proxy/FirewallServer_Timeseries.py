@@ -16,6 +16,7 @@ from keras.models import load_model
 from collections import Counter
 
 from sklearn import svm
+from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler
@@ -26,15 +27,15 @@ tcp_svm_instance = svm.SVC(kernel = 'linear', random_state=0)
 tcp_scaler = StandardScaler()
 udp_svm_instance = svm.SVC(kernel = 'linear', random_state=0)
 udp_scaler = StandardScaler()
-icmp_svm_instance = svm.SVC(kernel = 'linear', random_state=0)
+icmp_nb_instance = GaussianNB()
 icmp_scaler = StandardScaler()
 
-tcp_lstm_scaler = joblib.load('./scaler/scaler_lstm_tcp.save')
-tcp_lstm_model = load_model('./model/brnn_model_tcp.h5')
-udp_lstm_scaler = joblib.load('./scaler/scaler_lstm_udp.save')
-udp_lstm_model = load_model('./model/brnn_model_udp.h5')
-icmp_lstm_scaler = joblib.load('./scaler/scaler_lstm_icmp.save')
-icmp_lstm_model = load_model('./model/brnn_model_icmp.h5')
+tcp_lstm_scaler = joblib.load('./scaler/tcp_lstm_200.save')
+tcp_lstm_model = load_model('./model/tcp_lstm_200.h5')
+udp_lstm_scaler = joblib.load('./scaler/udp_lstm_200.save')
+udp_lstm_model = load_model('./model/udp_lstm_200.h5')
+icmp_lstm_scaler = joblib.load('./scaler/icmp_lstm_200.save')
+icmp_lstm_model = load_model('./model/icmp_lstm_200.h5')
 
 # Packet identification configuration
 use_machine_learning_identifier = True
@@ -172,7 +173,7 @@ def firewall(pkt):
     global tcp_scaler
     global udp_svm_instance
     global udp_scaler
-    global icmp_svm_instance
+    global icmp_nb_instance
     global icmp_scaler
     global use_machine_learning_identifier
 
@@ -267,7 +268,7 @@ def firewall(pkt):
                 if(use_machine_learning_identifier):
                     icmp_prediction_time_start = time.perf_counter()
                     icmp_data = icmp_scaler.transform([icmp_timeseries])
-                    icmp_result = icmp_svm_instance.predict([icmp_data[0]])[0]
+                    icmp_result = icmp_nb_instance.predict([icmp_data[0]])[0]
                     if(icmp_result == "1"):
                         pkt.drop()
                         print(f'ICMP packet dropped, prediction time : {time.perf_counter() - icmp_prediction_time_start}')
@@ -367,41 +368,40 @@ class TimeseriesDataExporter_TCP(Thread):
 
                 if(use_machine_learning_identifier):
                     if(result == 1.0 and len(tcp_normal_data) != 0):
-                        # Creating Machine Learning Identifier
-                        creating_machine_learning_start = time.perf_counter()
-                        print("TCP Creating machine learning identifier")
-                        
-                        tcp_ddos = False
+                        if(tcp_ddos == False):
+                            # Creating Machine Learning Identifier
+                            creating_machine_learning_start = time.perf_counter()
+                            print("TCP Creating machine learning identifier")
+                            
+                            features, labels = [], []
 
-                        features, labels = [], []
+                            tcp_bad_data = tcp_timeseries_data[:(tcp_timeseries_len+1)]
 
-                        tcp_bad_data = tcp_timeseries_data[:(tcp_timeseries_len+1)]
+                            for i in range(len(tcp_bad_data)):
+                                tcp_bad_data[i][5] = self.StringToBytes(str(tcp_bad_data[i][5]))
+                                tcp_bad_data[i].append("1")
+                            
+                            tcp_svm_data = tcp_bad_data + tcp_normal_data
 
-                        for i in range(len(tcp_bad_data)):
-                            tcp_bad_data[i][5] = self.StringToBytes(str(tcp_bad_data[i][5]))
-                            tcp_bad_data[i].append("1")
-                        
-                        tcp_svm_data = tcp_bad_data + tcp_normal_data
+                            for data in tcp_svm_data:
+                                features.append(data[:(len(data)-1)])
+                                labels.append(data[(len(data)-1)])
+                            print(f"Size of feature dataset : {len(features)}")
+                            print(f"Size of feature dataset : {len(labels)}")  
 
-                        for data in tcp_svm_data:
-                            features.append(data[:(len(data)-1)])
-                            labels.append(data[(len(data)-1)])
-                        print(f"Size of feature dataset : {len(features)}")
-                        print(f"Size of feature dataset : {len(labels)}")  
+                            features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.20, stratify=labels, random_state = 0)
+                            X_train = tcp_scaler.fit_transform(features_train)
+                            X_test = tcp_scaler.transform(features_test)
+                            tcp_svm_instance.fit(X_train, labels_train)
+                            labels_pred = tcp_svm_instance.predict(X_test)
+                            cm = confusion_matrix(labels_test,labels_pred)
+                            print(f'confussion matrix : {cm}')
+                            print(classification_report(labels_test,labels_pred))
 
-                        features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.20, stratify=labels, random_state = 0)
-                        X_train = tcp_scaler.fit_transform(features_train)
-                        X_test = tcp_scaler.transform(features_test)
-                        tcp_svm_instance.fit(X_train, labels_train)
-                        labels_pred = tcp_svm_instance.predict(X_test)
-                        cm = confusion_matrix(labels_test,labels_pred)
-                        print(f'confussion matrix : {cm}')
-                        print(classification_report(labels_test,labels_pred))
+                            tcp_ddos = True
 
-                        tcp_ddos = True
-
-                        print(f'TCP Finish creating machine learning identifier, creation time : {time.perf_counter() - creating_machine_learning_start}')
-                        time.sleep(3)
+                            print(f'TCP Finish creating machine learning identifier, creation time : {time.perf_counter() - creating_machine_learning_start}')
+                            time.sleep(3)
                     elif(result != 1.0):
                         tcp_normal_data = tcp_timeseries_data[:(tcp_timeseries_len+1)]
 
@@ -498,40 +498,39 @@ class TimeseriesDataExporter_UDP(Thread):
 
                 if(use_machine_learning_identifier):
                     if(result == 1.0 and len(udp_normal_data) != 0):
-                        # Creating Machine Learning Identifier
-                        creating_machine_learning_start = time.perf_counter()
-                        print("UDP Creating machine learning identifier")
-                        
-                        udp_ddos = False
+                        if(udp_ddos == False):
+                            # Creating Machine Learning Identifier
+                            creating_machine_learning_start = time.perf_counter()
+                            print("UDP Creating machine learning identifier")
+                            
+                            features, labels = [], []
 
-                        features, labels = [], []
+                            udp_bad_data = udp_timeseries_data[:(udp_timeseries_len+1)]
 
-                        udp_bad_data = udp_timeseries_data[:(udp_timeseries_len+1)]
+                            for i in range(len(udp_bad_data)):
+                                udp_bad_data[i].append("1")
+                            
+                            udp_svm_data = udp_bad_data + udp_normal_data
 
-                        for i in range(len(udp_bad_data)):
-                            udp_bad_data[i].append("1")
-                        
-                        udp_svm_data = udp_bad_data + udp_normal_data
+                            for data in udp_svm_data:
+                                features.append(data[:(len(data)-1)])
+                                labels.append(data[(len(data)-1)])
+                            print(f"Size of feature dataset : {len(features)}")
+                            print(f"Size of feature dataset : {len(labels)}")  
 
-                        for data in udp_svm_data:
-                            features.append(data[:(len(data)-1)])
-                            labels.append(data[(len(data)-1)])
-                        print(f"Size of feature dataset : {len(features)}")
-                        print(f"Size of feature dataset : {len(labels)}")  
+                            features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.20, stratify=labels, random_state = 0)
+                            X_train = udp_scaler.fit_transform(features_train)
+                            X_test = udp_scaler.transform(features_test)
+                            udp_svm_instance.fit(X_train, labels_train)
+                            labels_pred = udp_svm_instance.predict(X_test)
+                            cm = confusion_matrix(labels_test,labels_pred)
+                            print(f'confussion matrix : {cm}')
+                            print(classification_report(labels_test,labels_pred))
 
-                        features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.20, stratify=labels, random_state = 0)
-                        X_train = udp_scaler.fit_transform(features_train)
-                        X_test = udp_scaler.transform(features_test)
-                        udp_svm_instance.fit(X_train, labels_train)
-                        labels_pred = udp_svm_instance.predict(X_test)
-                        cm = confusion_matrix(labels_test,labels_pred)
-                        print(f'confussion matrix : {cm}')
-                        print(classification_report(labels_test,labels_pred))
+                            udp_ddos = True
 
-                        udp_ddos = True
-
-                        print(f'UDP Finish creating machine learning identifier, creation time : {time.perf_counter() - creating_machine_learning_start}')
-                        time.sleep(3)
+                            print(f'UDP Finish creating machine learning identifier, creation time : {time.perf_counter() - creating_machine_learning_start}')
+                            time.sleep(3)
                     elif(result != 1.0):
                         udp_normal_data = udp_timeseries_data[:(udp_timeseries_len+1)]
 
@@ -577,7 +576,7 @@ class TimeseriesDataExporter_ICMP(Thread):
         global icmp_lstm_model
         global icmp_lstm_scaler
         global icmp_normal_data
-        global icmp_svm_instance
+        global icmp_nb_instance
         global icmp_scaler
         global icmp_ddos
         global icmp_timeseries_len
@@ -608,40 +607,39 @@ class TimeseriesDataExporter_ICMP(Thread):
 
                 if(use_machine_learning_identifier):
                     if(result == 1.0 and len(icmp_normal_data) != 0):
-                        # Creating Machine Learning Identifier
-                        creating_machine_learning_start = time.perf_counter()
-                        print("ICMP Creating machine learning identifier")
-                        
-                        icmp_ddos = False
+                        if(icmp_ddos == False):
+                            # Creating Machine Learning Identifier
+                            creating_machine_learning_start = time.perf_counter()
+                            print("ICMP Creating machine learning identifier")
+                            
+                            features, labels = [], []
 
-                        features, labels = [], []
+                            icmp_bad_data = icmp_timeseries_data[:(icmp_timeseries_len+1)]
 
-                        icmp_bad_data = icmp_timeseries_data[:(icmp_timeseries_len+1)]
+                            for i in range(len(icmp_bad_data)):
+                                icmp_bad_data[i].append("1")
+                            
+                            icmp_svm_data = icmp_bad_data + icmp_normal_data
 
-                        for i in range(len(icmp_bad_data)):
-                            icmp_bad_data[i].append("1")
-                        
-                        icmp_svm_data = icmp_bad_data + icmp_normal_data
+                            for data in icmp_svm_data:
+                                features.append(data[:(len(data)-1)])
+                                labels.append(data[(len(data)-1)])
+                            print(f"Size of feature dataset : {len(features)}")
+                            print(f"Size of feature dataset : {len(labels)}")  
 
-                        for data in icmp_svm_data:
-                            features.append(data[:(len(data)-1)])
-                            labels.append(data[(len(data)-1)])
-                        print(f"Size of feature dataset : {len(features)}")
-                        print(f"Size of feature dataset : {len(labels)}")  
+                            features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.20, stratify=labels, random_state = 0)
+                            X_train = icmp_scaler.fit_transform(features_train)
+                            X_test = icmp_scaler.transform(features_test)
+                            icmp_nb_instance.fit(X_train, labels_train)
+                            labels_pred = icmp_nb_instance.predict(X_test)
+                            cm = confusion_matrix(labels_test,labels_pred)
+                            print(f'confussion matrix : {cm}')
+                            print(classification_report(labels_test,labels_pred))
 
-                        features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.20, stratify=labels, random_state = 0)
-                        X_train = icmp_scaler.fit_transform(features_train)
-                        X_test = icmp_scaler.transform(features_test)
-                        icmp_svm_instance.fit(X_train, labels_train)
-                        labels_pred = icmp_svm_instance.predict(X_test)
-                        cm = confusion_matrix(labels_test,labels_pred)
-                        print(f'confussion matrix : {cm}')
-                        print(classification_report(labels_test,labels_pred))
+                            icmp_ddos = True
 
-                        icmp_ddos = True
-
-                        print(f'ICMP Finish creating machine learning identifier, creation time : {time.perf_counter() - creating_machine_learning_start}')
-                        time.sleep(3)
+                            print(f'ICMP Finish creating machine learning identifier, creation time : {time.perf_counter() - creating_machine_learning_start}')
+                            time.sleep(3)
                     elif(result != 1.0):
                         icmp_normal_data = icmp_timeseries_data[:(icmp_timeseries_len+1)]
 

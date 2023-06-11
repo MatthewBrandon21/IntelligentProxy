@@ -24,8 +24,8 @@ from keras.models import load_model
 
 proxy_name = "node-proxy"
 
-http_lstm_scaler = joblib.load('./scaler/scaler_lstm_http.save')
-http_lstm_model = load_model('./model/brnn_model_http.h5')
+http_lstm_scaler = joblib.load('./scaler/http_lstm_50.save')
+http_lstm_model = load_model('./model/http_lstm_50.h5')
 
 class Server(Thread):
     def __init__(self, config):

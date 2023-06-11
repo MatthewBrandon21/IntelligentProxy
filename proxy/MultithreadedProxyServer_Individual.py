@@ -24,8 +24,8 @@ from sklearn.preprocessing import StandardScaler
 
 proxy_name = "node-proxy"
 
-http_model = joblib.load('./model/model_svm_http.sav')
-http_scaller = joblib.load('./scaler/scaler_svm_http.save')
+http_model = joblib.load('./model/http_svm.sav')
+http_scaller = joblib.load('./scaler/http_svm.save')
 
 class Server(Thread):
     def __init__(self, config):
