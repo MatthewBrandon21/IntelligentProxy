@@ -2,6 +2,7 @@ from netfilterqueue import NetfilterQueue
 from scapy.all import *
 import json
 import time
+import datetime
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import logging
@@ -319,7 +320,7 @@ def icmp_comparator(pkt, t):
 
 # Handler if file configuration modified
 def on_modified(event):
-    print(f"{event.src_path} has been modified")
+    print(f"{event.src_path} has been modified, time : {datetime.datetime.now()}")
     logging.info(f'{event.src_path} has been modified')
     logging.info('Firewall listener updating file configuration...')
     seedFromFile()

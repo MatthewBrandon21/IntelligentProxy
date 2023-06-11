@@ -4,6 +4,7 @@ import socket
 import threading
 from threading import Thread
 import time
+import datetime
 import struct
 import base64
 from time import strftime, gmtime
@@ -586,10 +587,20 @@ class DataParser(Thread):
     def __init__(self):
         super(DataParser, self).__init__()
 
+        global proxy_name
+
         # Data parser configuration
         self.sleep_time = 5
         self.file_name = "network.log"
         self.data_count = 10
+
+                # Backend configuration
+        self.keypair = {
+            "publicKey": "J3qMKmppagPPgnvZiQV8oXzNNXqLbgVojiKXJ7sBHdu1",
+            "privateKey": "hfvMY9yDqcKTnYQDir9kPUF8Vwf1oCxJ7u3quuF1yam"
+        }
+        self.source = proxy_name
+        self.backend_url = 'http://localhost:5000/api/firewall'
 
     def run(self):
         global http_lstm_model
@@ -671,7 +682,17 @@ class DataParser(Thread):
                                                     jsonFile.seek(0)  # rewind
                                                     json.dump(data, jsonFile)
                                                     jsonFile.truncate()
-                                            http_timeseries[ip_data[0][5]] = []
+                                                                                        
+                                                print(f"Sending to backend, time : {datetime.datetime.now()}")
+                                                ipAddress = ip_data[0][5]
+                                                firewallPayload = {'keypair': self.keypair, 'ipAddress' : ipAddress, 'source' : self.source}
+                                                try:
+                                                    x = requests.post(self.backend_url, json = firewallPayload)
+                                                except Exception as e:
+                                                    print(f'Send to backend error, e : {e}')
+                                                    logging.error(f"Send to backend error, e : {e}")
+                                            
+                                            http_timeseries.pop(ip_data[0][5])
 
             # Flush logfile
             with open(self.file_name, 'w'):
