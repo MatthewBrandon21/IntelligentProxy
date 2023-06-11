@@ -231,7 +231,7 @@ def firewall(pkt):
                     tcp_result = tcp_svm_instance.predict([tcp_data[0]])[0]
                     if(tcp_result == "1"):
                         pkt.drop()
-                        print(f'TCP packet dropped, prediction time : {time.perf_counter() - tcp_prediction_time_start}')
+                        print(f'TCP packet dropped, ip src : {sca.src}, prediction time : {time.perf_counter() - tcp_prediction_time_start}')
                         return
                 else:
                     if(tcp_comparator(pkt, t)):
@@ -251,7 +251,7 @@ def firewall(pkt):
                     udp_result = udp_svm_instance.predict([udp_data[0]])[0]
                     if(udp_result == "1"):
                         pkt.drop()
-                        print(f'UDP packet dropped, prediction time : {time.perf_counter() - udp_prediction_time_start}')
+                        print(f'UDP packet dropped, ip src : {sca.src}, prediction time : {time.perf_counter() - udp_prediction_time_start}')
                         return
                 else:
                     if(udp_comparator(pkt, t)):
@@ -272,7 +272,7 @@ def firewall(pkt):
                     icmp_result = icmp_nb_instance.predict([icmp_data[0]])[0]
                     if(icmp_result == "1"):
                         pkt.drop()
-                        print(f'ICMP packet dropped, prediction time : {time.perf_counter() - icmp_prediction_time_start}')
+                        print(f'ICMP packet dropped, ip src : {sca.src}, prediction time : {time.perf_counter() - icmp_prediction_time_start}')
                         return
                 else:
                     if(icmp_comparator(pkt, t)):
