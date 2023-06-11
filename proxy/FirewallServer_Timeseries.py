@@ -9,6 +9,7 @@ import logging
 import threading
 from threading import Thread
 import numpy as np
+import pandas as pd
 import statistics
 from statistics import mode
 
@@ -37,6 +38,72 @@ udp_lstm_scaler = joblib.load('./scaler/udp_lstm_200.save')
 udp_lstm_model = load_model('./model/udp_lstm_200.h5')
 icmp_lstm_scaler = joblib.load('./scaler/icmp_lstm_200.save')
 icmp_lstm_model = load_model('./model/icmp_lstm_200.h5')
+
+def StringToBytes( data):
+    sum = 0
+    arrbytes = bytes(data, 'utf-8')
+    for i in arrbytes:
+        sum = sum + i
+    return(sum)
+
+# Keras Warmup if not the first time will very very slow
+data_warm_tcp = pd.read_csv('./data_warm_up/tcp_data_warmup.csv')
+data_warm_tcp.columns=['port_src', 'seq', 'ack', 'dataofs', 'reserved', 'flags',
+       'window', 'chksum', 'urgptr', 'payload_len', 'label']
+features_tcp=['port_src', 'seq', 'ack', 'dataofs', 'reserved', 'flags',
+       'window', 'chksum', 'urgptr', 'payload_len']
+data_warm_tcp= data_warm_tcp[features_tcp].values
+X_tcp=data_warm_tcp
+for i in range(len(X_tcp)):
+    X_tcp[i][5] = StringToBytes(str(X_tcp[i][5]))
+X_tcp = tcp_lstm_scaler.transform(X_tcp)
+features_tcp = len(X_tcp[0])
+samples_tcp = X_tcp.shape[0]
+train_len_tcp = 200
+input_len_tcp = samples_tcp - train_len_tcp
+I_tcp = np.zeros((samples_tcp - train_len_tcp, train_len_tcp, features_tcp))
+for i in range(input_len_tcp):
+    temp_tcp = np.zeros((train_len_tcp, features_tcp))
+    for j in range(i, i + train_len_tcp - 1):
+        temp_tcp[j-i] = X_tcp[j]
+    I_tcp[i] = temp_tcp
+predict = tcp_lstm_model.predict(I_tcp[:200], verbose=1)
+
+data_warm_udp = pd.read_csv('./data_warm_up/udp_data_warmup.csv')
+data_warm_udp.columns=['port_src', 'len', 'chksum', 'payload_len', 'label']
+features_udp=['port_src', 'len', 'chksum', 'payload_len']
+data_warm_udp= data_warm_udp[features_udp].values
+X_udp=data_warm_udp
+X_udp = udp_lstm_scaler.transform(X_udp)
+features_udp = len(X_udp[0])
+samples_udp = X_udp.shape[0]
+train_len_udp = 200
+input_len_udp = samples_udp - train_len_udp
+I_udp = np.zeros((samples_udp - train_len_udp, train_len_udp, features_udp))
+for i in range(input_len_udp):
+    temp_udp = np.zeros((train_len_udp, features_udp))
+    for j in range(i, i + train_len_udp - 1):
+        temp_udp[j-i] = X_udp[j]
+    I_udp[i] = temp_udp
+predict = udp_lstm_model.predict(I_udp[:200], verbose=1)
+
+data_warm_icmp = pd.read_csv('./data_warm_up/icmp_data_warmup.csv')
+data_warm_icmp.columns=['chksum', 'id', 'seq', 'payload_len', 'label']
+features_icmp=['chksum', 'id', 'seq', 'payload_len']
+data_warm_icmp= data_warm_icmp[features_icmp].values
+X_icmp=data_warm_icmp
+X_icmp = icmp_lstm_scaler.transform(X_icmp)
+features_icmp = len(X_icmp[0])
+samples_icmp = X_icmp.shape[0]
+train_len_icmp = 200
+input_len_icmp = samples_icmp - train_len_icmp
+I_icmp = np.zeros((samples_icmp - train_len_icmp, train_len_icmp, features_icmp))
+for i in range(input_len_icmp):
+    temp_icmp = np.zeros((train_len_icmp, features_icmp))
+    for j in range(i, i + train_len_icmp - 1):
+        temp_icmp[j-i] = X_icmp[j]
+    I_icmp[i] = temp_icmp
+predict = icmp_lstm_model.predict(I_icmp[:200], verbose=1)
 
 # Packet identification configuration
 use_machine_learning_identifier = True
@@ -283,37 +350,30 @@ def firewall(pkt):
     # Forward packet to iptables
     pkt.accept()
 
-def StringToBytes( data):
-    sum = 0
-    arrbytes = bytes(data, 'utf-8')
-    for i in arrbytes:
-        sum = sum + i
-    return(sum)
-
 def tcp_comparator(pkt, t):
     global tcp_signature
-    if(tcp_signature['dataofs'] == int(t.dataofs) and
-       tcp_signature['reserved'] == int(t.reserved) and
-       tcp_signature['flags'] == str(t.flags) and
-       tcp_signature['window'] == int(t.window) and
-       tcp_signature['urgptr'] == int(t.urgptr) and
-       tcp_signature['payload_len'] == int(pkt.get_payload_len())):
+    if(int(tcp_signature['dataofs']) == int(t.dataofs) and
+       int(tcp_signature['reserved']) == int(t.reserved) and
+       tcp_signature['flags'] == int(StringToBytes(str(t.flags))) and
+       int(tcp_signature['window']) == int(t.window) and
+       int(tcp_signature['urgptr']) == int(t.urgptr) and
+       int(tcp_signature['payload_len']) == int(pkt.get_payload_len())):
         return True
     else:
         return False
 
 def udp_comparator(pkt, t):
     global udp_signature
-    if(udp_signature['len'] == int(t.len) and
-       udp_signature['payload_len'] == int(pkt.get_payload_len())):
+    if(int(udp_signature['len']) == int(t.len) and
+       int(udp_signature['payload_len']) == int(pkt.get_payload_len())):
         return True
     else:
         return False
 
 def icmp_comparator(pkt, t):
     global icmp_signature
-    if(icmp_signature['id'] == int(t.id) and
-       icmp_signature['payload_len'] == int(pkt.get_payload_len())):
+    if(int(icmp_signature['id']) == int(t.id) and
+       int(icmp_signature['payload_len']) == int(pkt.get_payload_len())):
         return True
     else:
         return False
@@ -340,6 +400,7 @@ class TimeseriesDataExporter_TCP(Thread):
         global tcp_ddos
         global tcp_timeseries_len
         global use_machine_learning_identifier
+        global tcp_signature
 
         while True:
             if(len(tcp_timeseries_data) >= (tcp_timeseries_len+1)):
@@ -473,6 +534,7 @@ class TimeseriesDataExporter_UDP(Thread):
         global udp_ddos
         global udp_timeseries_len
         global use_machine_learning_identifier
+        global udp_signature
 
         while True:
             if(len(udp_timeseries_data) >= (udp_timeseries_len+1)):
@@ -582,6 +644,7 @@ class TimeseriesDataExporter_ICMP(Thread):
         global icmp_ddos
         global icmp_timeseries_len
         global use_machine_learning_identifier
+        global icmp_signature
 
         while True:
             if(len(icmp_timeseries_data) >= (icmp_timeseries_len+1)):
