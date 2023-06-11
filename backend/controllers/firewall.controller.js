@@ -8,7 +8,7 @@ const dem = require("../services/DemocracyService");
 // Firewall rules configuration
 const fs = require("fs");
 // Change to real firewall rules file
-const fileName = "FirewallRulesClone.json";
+const fileName = "../proxy/FirewallRulesClone.json";
 let firewallRules = require("../../proxy/FirewallRulesClone.json");
 
 exports.create = function (req, res) {

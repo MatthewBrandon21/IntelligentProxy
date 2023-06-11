@@ -5,7 +5,7 @@ const crabService = new CRABService("myModel");
 
 const fs = require("fs");
 // change the firewall rules file
-const fileName = "FirewallRulesClone.json";
+const fileName = "../proxy/FirewallRulesClone.json";
 let firewallRules = require("../../proxy/FirewallRulesClone.json");
 
 cron.schedule("* * * * *", () => {

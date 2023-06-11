@@ -5,7 +5,7 @@ var Democracy = require("democracy");
 
 const fs = require("fs");
 // change the firewall rule name
-const fileName = "FirewallRulesClone.json";
+const fileName = "../proxy/FirewallRulesClone.json";
 let firewallRules = require("../../proxy/FirewallRulesClone.json");
 
 var dem = new Democracy({
