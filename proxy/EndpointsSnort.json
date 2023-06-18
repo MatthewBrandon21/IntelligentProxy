@@ -4,49 +4,49 @@
       "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.158",
-      "port": 3001,
+      "port": 5000,
       "url": "/"
     },
     {
       "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.158",
-      "port": 3001,
+      "port": 5000,
       "url": "/login"
     },
     {
       "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.158",
-      "port": 3001,
+      "port": 5000,
       "url": "/home"
     },
     {
       "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.158",
-      "port": 3001,
+      "port": 5000,
       "url": "/register"
     },
     {
       "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.158",
-      "port": 3001,
+      "port": 5000,
       "url": "/documentation"
     },
     {
       "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.158",
-      "port": 3001,
+      "port": 5000,
       "url": "/singlepageapplication"
     },
     {
       "type": "GET",
       "protocol": "http",
       "ip": "192.168.29.158",
-      "port": 3001,
+      "port": 5000,
       "url": "/api"
     }
   ]
