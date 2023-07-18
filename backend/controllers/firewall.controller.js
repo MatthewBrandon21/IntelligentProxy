@@ -11,7 +11,7 @@ const fs = require("fs");
 const fileName = "../proxy/FirewallRulesClone.json";
 let firewallRules = require("../../proxy/FirewallRulesClone.json");
 
-exports.create = function (req, res) {
+exports.create = async function (req, res) {
   if (!req.body.keypair) {
     return res.status(400).send({ message: "keypair is required" });
   }
@@ -26,7 +26,7 @@ exports.create = function (req, res) {
   const topublickey = req.body.keypair.publicKey;
   let assetId = null;
 
-  crabService.retrieveAllAssets().then((value) => {
+  await crabService.retrieveAllAssets().then((value) => {
     let status = false;
     var date = new Date();
 
@@ -51,25 +51,37 @@ exports.create = function (req, res) {
           data: dataFirewall,
         };
 
-        crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
-          // Publish to consensus channel
-          dem.publish("firewall-channel", "A new firewall data has been created, id : " + value.id);
+        try {
+          crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
+            // Publish to consensus channel
+            dem.publish("firewall-channel", "A new firewall data has been created, id : " + value.id);
 
-          // Update the firewall rules file
-          let firewallConfiguration = [];
-          value.data.data.map((asset) => {
-            firewallConfiguration.push(asset.ipAddress);
-          });
-          console.log("updating firewall rules to FirewallRules.json");
-          firewallRules.ListOfBannedIpAddr = firewallConfiguration;
-          fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
-            if (err) return console.log(err);
-            // console.log(JSON.stringify(firewallRules));
-            // console.log("writing to " + fileName);
-          });
+            // Update the firewall rules file
+            let firewallConfiguration = [];
+            try {
+              value.data.data.map((asset) => {
+                firewallConfiguration.push(asset.ipAddress);
+              });
+            } catch (e) {
+              console.log(e.message);
+              message = e.message;
+              return res.status(500).send({ message: { message } });
+            }
+            console.log("updating firewall rules to FirewallRules.json");
+            firewallRules.ListOfBannedIpAddr = firewallConfiguration;
+            fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
+              if (err) return console.log(err);
+              // console.log(JSON.stringify(firewallRules));
+              // console.log("writing to " + fileName);
+            });
 
-          return res.json(value);
-        });
+            return res.json(value);
+          });
+        } catch (e) {
+          console.log(e.message);
+          message = e.message;
+          return res.status(500).send({ message: { message } });
+        }
       }
     });
 
@@ -110,7 +122,7 @@ exports.create = function (req, res) {
   });
 };
 
-exports.deleteIpAddress = function (req, res) {
+exports.deleteIpAddress = async function (req, res) {
   if (!req.body.keypair) {
     return res.status(400).send({ message: "keypair is required" });
   }
@@ -121,7 +133,7 @@ exports.deleteIpAddress = function (req, res) {
 
   let assetId = null;
 
-  crabService.retrieveAllAssets().then((value) => {
+  await crabService.retrieveAllAssets().then((value) => {
     let status = false;
 
     value.map((asset) => {
@@ -139,23 +151,35 @@ exports.deleteIpAddress = function (req, res) {
           data: filteredArray,
         };
 
-        crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
-          dem.publish("firewall-channel", "A firewall data has been modified, id : " + value.id);
+        try {
+          crabService.appendAsset(assetId, userKeypair, topublickey, metadata).then((value) => {
+            dem.publish("firewall-channel", "A firewall data has been modified, id : " + value.id);
 
-          let firewallConfiguration = [];
-          value.data.data.map((asset) => {
-            firewallConfiguration.push(asset.ipAddress);
-          });
-          console.log("updating firewall rules to FirewallRules.json");
-          firewallRules.ListOfBannedIpAddr = firewallConfiguration;
-          fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
-            if (err) return console.log(err);
-            // console.log(JSON.stringify(firewallRules));
-            // console.log("writing to " + fileName);
-          });
+            let firewallConfiguration = [];
+            try {
+              value.data.data.map((asset) => {
+                firewallConfiguration.push(asset.ipAddress);
+              });
+            } catch (e) {
+              console.log(e.message);
+              message = e.message;
+              return res.status(500).send({ message: { message } });
+            }
+            console.log("updating firewall rules to FirewallRules.json");
+            firewallRules.ListOfBannedIpAddr = firewallConfiguration;
+            fs.writeFile(fileName, JSON.stringify(firewallRules), function writeJSON(err) {
+              if (err) return console.log(err);
+              // console.log(JSON.stringify(firewallRules));
+              // console.log("writing to " + fileName);
+            });
 
-          return res.json(value);
-        });
+            return res.json(value);
+          });
+        } catch (e) {
+          console.log(e.message);
+          message = e.message;
+          return res.status(500).send({ message: { message } });
+        }
       }
     });
 
@@ -165,8 +189,8 @@ exports.deleteIpAddress = function (req, res) {
   });
 };
 
-exports.findAll = function (req, res) {
-  crabService.retrieveAllAssets().then((value) => {
+exports.findAll = async function (req, res) {
+  await crabService.retrieveAllAssets().then((value) => {
     let status = false;
 
     value.map((asset) => {
@@ -205,7 +229,7 @@ exports.findAll = function (req, res) {
   });
 };
 
-exports.delete = function (req, res) {
+exports.delete = async function (req, res) {
   if (!req.body.keypair) {
     return res.status(400).send({ message: "keypair is required" });
   }
@@ -213,7 +237,7 @@ exports.delete = function (req, res) {
   const userKeypair = req.body.keypair;
   let assetId = null;
 
-  crabService.retrieveAllAssets().then((value) => {
+  await crabService.retrieveAllAssets().then((value) => {
     let status = false;
 
     value.map((asset) => {
