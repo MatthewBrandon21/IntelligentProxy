@@ -529,6 +529,7 @@ class TimeseriesDataExporter_TCP(Thread):
                 tcp_timeseries_data_temp = []
                 tcp_timeseries_data = []
     
+    @lru_cache(maxsize=5)
     def StringToBytes(self, data):
         sum = 0
         arrbytes = bytes(data, 'utf-8')
