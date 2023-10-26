@@ -6,6 +6,7 @@ import datetime
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 import logging
+from functools import lru_cache
 
 firewall_name = "node-firewall"
 
@@ -91,45 +92,63 @@ def seedFromFile():
         ListOfBannedPrefixes = []
         ListOfWebserverPorts = []
 
+@lru_cache
+def isWebserverIp(ip):
+    if ip in ListOfWebserverIpAddr:
+        return true
+    return false
+
+@lru_cache
+def isBannedIp(ip):
+    if ip in ListOfBannedIpAddr:
+        print(ip, "is a incoming IP address that is banned by the firewall.")
+        logging.info(f'{ip} is a incoming IP address that is banned by the firewall.')
+        return true
+    return false
+
+@lru_cache
+def isBannedPort(port):
+    if port in ListOfBannedPorts:
+        print(port, "is a destination port that is blocked by the firewall.")
+        logging.info(f'{port} is a destination port that is blocked by the firewall.')
+        return true
+    return false
+
+@lru_cache
+def isBannedPrefix(prefix):
+    if True in [prefix.find(suff) == 0 for suff in ListOfBannedPrefixes]:
+        print("Prefix of " + prefix + " is banned by the firewall.")
+        logging.info(f'Prefix of {prefix} is banned by the firewall.')
+        return true
+    return false
 
 def firewall(pkt):
     # parse packet data from incomming connection
     sca = IP(pkt.get_payload())
 
     # Webserver whitelist
-    if sca.src in ListOfWebserverIpAddr:
+    if isWebserverIp(sca.src):
         pkt.accept()
         return
 
     # IP address firewall
-    if sca.src in ListOfBannedIpAddr:
-        print(sca.src, "is a incoming IP address that is banned by the firewall.")
-        logging.info(f'{sca.src} is a incoming IP address that is banned by the firewall.')
+    if isBannedIp(sca.src):
         pkt.drop()
         return
 
-    # TCP Port firewall
+    # Port firewall
+    t = None
     if sca.haslayer(TCP):
         t = sca.getlayer(TCP)
-        if t.dport in ListOfBannedPorts:
-            print(t.dport, "is a destination port that is blocked by the firewall.")
-            logging.info(f'{t.dport} is a destination port that is blocked by the firewall.')
-            pkt.drop()
-            return
-
-    # UDP Port firewall
-    if sca.haslayer(UDP):
+    else if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
-        if t.dport in ListOfBannedPorts:
-            print(t.dport, "is a destination port that is blocked by the firewall.")
-            logging.info(f'{t.dport} is a destination port that is blocked by the firewall.')
+    if (t != None):
+        if isBannedPort(t.dport):
             pkt.drop()
             return
 
     # Prefixes firewall
-    if True in [sca.src.find(suff) == 0 for suff in ListOfBannedPrefixes]:
-        print("Prefix of " + sca.src + " is banned by the firewall.")
-        logging.info(f'Prefix of {sca.src} is banned by the firewall.')
+    if isBannedPrefix(sca.src):
         pkt.drop()
         return
     
