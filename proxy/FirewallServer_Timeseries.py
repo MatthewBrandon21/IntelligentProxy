@@ -352,7 +352,7 @@ def firewall(pkt):
     # Forward packet to iptables
     pkt.accept()
 
-@lru_cache
+@lru_cache(maxsize=1)
 def tcp_datasouce_comparator(dataofs, reserved, flags, window, urgptr, payload_len):
     global tcp_signature
     if(int(tcp_signature['dataofs']) == int(dataofs) and
@@ -370,7 +370,7 @@ def tcp_comparator(pkt, t):
         return True
     return False
 
-@lru_cache
+@lru_cache(maxsize=1)
 def udp_datasouce_comparator(len, payload_len):
     global udp_signature
     if(int(udp_signature['len']) == int(len) and
@@ -384,7 +384,7 @@ def udp_comparator(pkt, t):
         return True
     return False
 
-@lru_cache
+@lru_cache(maxsize=1)
 def icmp_datasouce_comparator(id, payload_len):
     global icmp_signature
     if(int(icmp_signature['id']) == int(id) and
