@@ -160,6 +160,14 @@ def on_modified(event):
     print(f"{event.src_path} has been modified, time : {datetime.datetime.now()}")
     logging.info(f'{event.src_path} has been modified')
     logging.info('Firewall listener restarting...')
+
+    #Clear LRU Cache
+    isWebserverIp.cache_clear()
+    isBannedIp.cache_clear()
+    isBannedPort.cache_clear()
+    isBannedPrefix.cache_clear()
+
+    #Reload datasource
     seedFromFile()
 
 class LoggerFilter(object):
