@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import statistics
 from statistics import mode
+from functools import lru_cache
 
 import joblib
 from keras.models import load_model
@@ -39,6 +40,7 @@ udp_lstm_model = load_model('./model/udp_lstm_200.h5')
 icmp_lstm_scaler = joblib.load('./scaler/icmp_lstm_200.save')
 icmp_lstm_model = load_model('./model/icmp_lstm_200.h5')
 
+@lru_cache(maxsize=5)
 def StringToBytes( data):
     sum = 0
     arrbytes = bytes(data, 'utf-8')
@@ -306,7 +308,7 @@ def firewall(pkt):
                         pkt.drop()
                         return
     
-    if sca.haslayer(UDP):
+    else if sca.haslayer(UDP):
         t = sca.getlayer(UDP)
         if t.dport in ListOfWebserverPorts:
             udp_timeseries = [str(t.sport), str(t.len), str(t.chksum), str(pkt.get_payload_len())]
@@ -326,7 +328,7 @@ def firewall(pkt):
                         pkt.drop()
                         return
     
-    if sca.haslayer(ICMP):
+    else if sca.haslayer(ICMP):
         t = sca.getlayer(ICMP)
         # Only ICMP echo request
         if(t.code==0 and t.type==8):
@@ -350,33 +352,52 @@ def firewall(pkt):
     # Forward packet to iptables
     pkt.accept()
 
+@lru_cache
+def tcp_datasouce_comparator(dataofs, reserved, flags, window, urgptr, payload_len):
+    global tcp_signature
+    if(int(tcp_signature['dataofs']) == int(dataofs) and
+       int(tcp_signature['reserved']) == int(reserved) and
+       tcp_signature['flags'] == int(StringToBytes(str(flags))) and
+       int(tcp_signature['window']) == int(window) and
+       int(tcp_signature['urgptr']) == int(urgptr) and
+       int(tcp_signature['payload_len']) == int(payload_len):
+        return True
+    return False
+
 def tcp_comparator(pkt, t):
     global tcp_signature
-    if(int(tcp_signature['dataofs']) == int(t.dataofs) and
-       int(tcp_signature['reserved']) == int(t.reserved) and
-       tcp_signature['flags'] == int(StringToBytes(str(t.flags))) and
-       int(tcp_signature['window']) == int(t.window) and
-       int(tcp_signature['urgptr']) == int(t.urgptr) and
-       int(tcp_signature['payload_len']) == int(pkt.get_payload_len())):
+    if tcp_datasouce_comparator(t.dataofs, t.reserved, t.flags, t.window, t.urgptr, pkt.get_payload_len()):
         return True
-    else:
-        return False
+    return False
+
+@lru_cache
+def udp_datasouce_comparator(len, payload_len):
+    global udp_signature
+    if(int(udp_signature['len']) == int(len) and
+       int(udp_signature['payload_len']) == int(payload_len)):
+        return True
+    return False
 
 def udp_comparator(pkt, t):
     global udp_signature
-    if(int(udp_signature['len']) == int(t.len) and
-       int(udp_signature['payload_len']) == int(pkt.get_payload_len())):
+    if udp_datasouce_comparator(t.len, pkt.get_payload_len()):
+        return True
+    return False
+
+@lru_cache
+def icmp_datasouce_comparator(id, payload_len):
+    global icmp_signature
+    if(int(icmp_signature['id']) == int(id) and
+       int(icmp_signature['payload_len']) == int(payload_len)):
         return True
     else:
         return False
 
 def icmp_comparator(pkt, t):
     global icmp_signature
-    if(int(icmp_signature['id']) == int(t.id) and
-       int(icmp_signature['payload_len']) == int(pkt.get_payload_len())):
+    if icmp_datasouce_comparator(t.id, pkt.get_payload_len()):
         return True
-    else:
-        return False
+    return False
 
 # Handler if file configuration modified
 def on_modified(event):
