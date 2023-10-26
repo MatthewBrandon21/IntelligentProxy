@@ -16,6 +16,8 @@ To find data features, using standard deviation and variance population statisti
 
 - Looking for alternatives netfilterQueue that causes bootleneck in network throughput
 
+- Caching for datasource (especially for firewall controller)
+
 ## Tech Stack
 
 **Frontend:** ReactJS, Axios, react-router-dom, jwt-decode, Bulma CSS
